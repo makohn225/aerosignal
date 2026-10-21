@@ -1,0 +1,9 @@
+{
+  "name": "aerosignal",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "acorn": "8.19.0",
+    "terser": "5.51.2"
+  }
+}

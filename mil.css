@@ -1,0 +1,1 @@
+.trgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}.trc{display:flex;gap:8px;align-items:baseline;padding:6px 10px;border:1px solid var(--line2);border-radius:8px;background:var(--glass3);font-size:13px}.trc b{color:var(--cyan)}.trc span:last-child{margin-left:auto;font-size:11.5px}

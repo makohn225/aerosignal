@@ -1,0 +1,35 @@
+.mtabs{width:100%;box-sizing:border-box;align-self:stretch;flex:none;position:sticky;top:0;z-index:5;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:8px 10px;background:rgba(6,12,24,.97);border-bottom:1px solid var(--line2)}
+.mtabs button{appearance:none;border:1px solid var(--line2);background:transparent;color:var(--ink2);border-radius:9px;padding:8px 4px;font-family:var(--disp);font-weight:600;font-size:11px;letter-spacing:1.2px;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
+.mtabs button[aria-selected=true]{color:#041018;background:var(--cyan);border-color:var(--cyan);box-shadow:0 0 14px rgba(61,224,255,.35)}
+.mtabs button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.tabn{font-family:var(--mono);font-size:10.5px;padding:0 5px;border-radius:5px;background:rgba(255,181,71,.2);color:var(--amber);letter-spacing:0}
+.tabn:empty{display:none}
+.tabn.f{background:rgba(255,59,92,.22);color:#ff6b82}
+.mtabs button[aria-selected=true] .tabn{background:rgba(4,16,24,.25);color:#041018}
+#mctl[data-tab=hz] .altwrap{display:none}
+#mctl[data-tab=alt] #hzlist,#mctl[data-tab=air] #hzlist,#mctl[data-tab=alt] .hzctl,#mctl[data-tab=air] .hzctl,#mctl[data-tab=alt] .hzfoot,#mctl[data-tab=air] .hzfoot{display:none}
+#mctl[data-tab=alt] .altsec:not(.t-alt){display:none}
+#mctl[data-tab=air] .altsec.t-alt{display:none}
+#mctl[data-tab] .altwrap{border-bottom:0}
+.altsec.mtr-legacy{display:none!important}
+.mtrchips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.mtrchip{display:inline-flex;align-items:stretch;border-radius:6px;overflow:hidden;background:var(--c)}
+.mtrchip button{appearance:none;border:0;background:transparent;color:#041018;font-family:var(--mono);font-weight:700;font-size:12px;padding:3px 8px;cursor:pointer}
+.mtrchip .mtrdel{border-left:1px solid rgba(4,16,24,.25);font-size:14px;line-height:1;padding:3px 7px}
+.mtrchip button:hover{background:rgba(255,255,255,.25)}
+.mtradd{display:flex;gap:8px;align-items:center}
+.mtradd input{flex:1;min-width:0;padding:7px 10px;font-family:var(--mono);text-transform:uppercase}
+.mtradd .btn{white-space:nowrap}
+#mtrMsg{margin-top:6px}
+.mtr-bad{color:var(--amber)}
+.mtrlist .mtrtoggle{flex:none;align-self:center;min-width:72px}
+.mtr-lbl{position:absolute;transform:translate(-50%,-140%);white-space:nowrap;font-family:var(--mono);font-size:11.5px;font-weight:700;color:#041018;background:var(--c);padding:1px 6px;border-radius:5px;box-shadow:0 0 0 1px rgba(4,16,24,.6),0 2px 6px rgba(0,0,0,.5)}
+.mhzfab{position:absolute;left:56px;top:12px;z-index:600;display:flex;gap:6px;align-items:center;box-shadow:0 4px 14px rgba(0,0,0,.45)}
+.mhzfab b{font-family:var(--mono);font-size:11px}
+.mhzfab b:empty{display:none}
+.mapwrap.split{position:relative}
+.mapwrap.split:not(.collapsed) .mhzfab{display:none}
+#mwrap.collapsed #mshow{display:none!important}
+@media (max-width:860px){.mhzfab{left:50%;top:auto;bottom:14px;transform:translateX(-50%)}.mapwrap.split:not(.collapsed) .mhzfab{display:none}.mtabs{padding:6px 8px}.mtabs button{font-size:10.5px;padding:7px 2px;letter-spacing:.8px}}
+.mtabs{border-top:0}
+@media (max-width:860px){#mctl .hzhead h2{display:none}#mctl:not([data-tab=hz]) .hzhead{display:none}}

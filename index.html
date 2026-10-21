@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AeroSignal</title>
+<meta name="theme-color" content="#050A14">
+<meta name="color-scheme" content="dark">
+<meta name="description" content="Preflight mishap intelligence for civilian and military pilots.">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="AeroSignal">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23050A14'/%3E%3Cpath d='M6 20 L16 8 L26 20' stroke='%233DE0FF' stroke-width='3.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='16' cy='23' r='2.5' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Chakra+Petch:wght@500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="/map.css">
+<link rel="stylesheet" href="/missions.css">
+<link rel="stylesheet" href="/oa.css">
+<link rel="stylesheet" href="/alt.css">
+<link rel="stylesheet" href="/mil.css">
+<link rel="stylesheet" href="/route.css">
+<link rel="stylesheet" href="/demo.css">
+<link rel="stylesheet" href="/acct.css">
+<link rel="stylesheet" href="/fb.css">
+<link rel="stylesheet" href="/tour.css">
+<link rel="stylesheet" href="/sym.css">
+<link rel="stylesheet" href="/mtab.css">
+<link rel="stylesheet" href="/kb.css">
+</head>
+<body>
+<div class="shell">
+  <header class="topbar">
+    <a class="brand" href="#/plan">Aero<span>Signal</span></a>
+    <button class="flightchip" id="flightChip" type="button" aria-label="Current flight"></button>
+  </header>
+  <nav class="tabs" aria-label="Main">
+    <a href="#/plan" data-tab="plan"><svg viewBox="0 0 24 24"><path d="M4 20l4-1 11-11-3-3L5 16z M14 6l3 3"/></svg><span>Plan</span></a>
+    <a href="#/maps" data-tab="maps"><svg viewBox="0 0 24 24"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3z M9 3v15 M15 6v15"/></svg><span>Maps</span></a>
+    <a href="#/flights" data-tab="flights"><svg viewBox="0 0 24 24"><path d="M2 16l20-8-7 13-3-6z M12 15l3-4"/></svg><span>Flights</span></a>
+    <a href="#/brief" data-tab="brief"><svg viewBox="0 0 24 24"><path d="M12 3l9 16H3z M12 10v4 M12 17h.01"/></svg><span>Brief</span></a>
+    <a href="#/missions" data-tab="missions"><svg viewBox="0 0 24 24"><path d="M4 21V4 M4 4h11l-2 4 2 4H4 M8 17l3 3 6-7"/></svg><span>Missions</span></a>
+    <a href="#/logbook" data-tab="logbook"><svg viewBox="0 0 24 24"><path d="M5 3h12a2 2 0 012 2v16H7a2 2 0 01-2-2z M9 7h6 M9 11h6"/></svg><span>Logbook</span></a>
+    <a href="#/more" data-tab="more"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg><span>More</span></a>
+  </nav>
+  <main id="view" tabindex="-1"></main>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="/p1.js"></script>
+<script src="/p2.js"></script>
+<script src="/p3.js"></script>
+<script src="/p4.js"></script>
+<script src="/p5.js"></script>
+<script src="/p6.js"></script>
+<script src="/p7.js"></script>
+<script src="/p8.js"></script>
+<script src="/p9.js"></script>
+<script src="/p10.js"></script>
+<script src="/p11.js"></script>
+<script src="/p12.js"></script>
+<script src="/p13.js"></script>
+<script src="/p14.js"></script>
+<script src="/p15.js"></script>
+<script src="/p16.js"></script>
+<script src="/p17.js"></script>
+<script src="/p18.js"></script>
+<script src="/p19.js"></script>
+<script src="/p20.js"></script>
+<script src="/p21.js"></script>
+<script src="/p22.js"></script>
+<script src="/p23.js"></script>
+<script src="/p24.js"></script>
+<script src="/p25.js"></script>
+<script src="/p26.js"></script>
+<script src="/p27.js"></script>
+<script src="/p28.js"></script>
+<script src="/p29.js"></script>
+<script src="/p30.js"></script>
+<script src="/p31.js"></script>
+<script src="/p32.js"></script>
+<script src="/p33.js"></script>
+<script src="/p34.js"></script>
+<script src="/p35.js"></script>
+<script src="/p36.js"></script>
+<script src="/p37.js"></script>
+<script src="/p38.js"></script>
+<script src="/p39.js"></script>
+<script src="/p40.js"></script>
+<script src="/p41.js"></script>
+<script src="/p42.js"></script>
+<script src="/p43.js"></script>
+<script src="/p44.js"></script>
+<script src="/p45.js"></script>
+<script src="/p46.js"></script>
+<script src="/p47.js"></script>
+<script src="/p48.js"></script>
+<script src="/p49.js"></script>
+<script src="/p50.js"></script>
+<script src="/p51.js"></script>
+<script src="/p52.js"></script>
+<script src="/p53.js"></script>
+<script src="/p54.js"></script>
+<script src="/p55.js"></script>
+<script src="/p56.js"></script>
+<script src="/p57.js"></script>
+<script src="/p58.js"></script>
+<script src="/p59.js"></script>
+<script src="/p60.js"></script>
+<script src="/p62.js"></script>
+<script src="/p63.js"></script>
+<script src="/p64.js"></script>
+<script src="/p65.js"></script>
+<script src="/p66.js"></script>
+<script src="/p67.js"></script>
+<script src="/p68.js"></script>
+<script src="/p69.js"></script>
+<script src="/p70.js"></script>
+<script src="/p71.js"></script>
+<script src="/p72.js"></script>
+<script src="/p73.js"></script>
+<script src="/p74.js"></script>
+<script src="/p75.js"></script>
+<script src="/p76.js"></script>
+<script src="/p77.js"></script>
+<script src="/p78.js"></script>
+<script src="/p79.js"></script>
+<script src="/p80.js"></script>
+<script src="/p81.js"></script>
+</body>
+</html>

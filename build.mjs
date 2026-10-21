@@ -9,7 +9,7 @@ import crypto from "crypto";
 
 const ROOT = process.cwd();
 const OUT = path.join(ROOT, "dist");
-const SKIP = new Set(["node_modules", "dist", ".vercel", ".git", "build.mjs", "package.json", "package-lock.json", "vercel.json", ".vercelignore"]);
+const SKIP = new Set(["node_modules", "dist", ".vercel", ".git", "build.mjs", "package.json", "package-lock.json", "vercel.json", ".vercelignore", ".gitignore", ".github", "supabase", "README.md"]);
 const sha = (s) => crypto.createHash("sha1").update(s).digest("hex").slice(0, 10);
 const read = (p) => fs.readFileSync(path.join(ROOT, p.replace(/^\//, "")), "utf8");
 

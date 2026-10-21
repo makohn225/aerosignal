@@ -25,7 +25,7 @@ cd dist && python3 -m http.server 8794
 
 ## Deploy
 
-Production deploys from this repository through Vercel (project `aerosignal-app`).
+Production deploys automatically from the main branch of this repository through Vercel (project `aerosignal-app`). Every push to main publishes the site.
 Edge functions deploy to Supabase project `jcvrcckeprmpcruhxafm`.
 
 ## Rules that never change

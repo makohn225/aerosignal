@@ -16,7 +16,7 @@
    window.AERO_SCHOOL_PREVIEW = true before the app loads. */
 (function () {
   const ENFORCE = false;
-  const SCHOOLS_LIVE = false;
+  const SCHOOLS_LIVE = true; // privacy sentence approved October 22, 2026 (p133)
   const schoolsOn = () => SCHOOLS_LIVE || window.AERO_SCHOOL_PREVIEW === true;
   const REST = (p) => `${SUPA.url}/rest/v1/${p}`;
   const h = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));

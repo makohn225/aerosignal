@@ -83,8 +83,8 @@ Edge functions deploy to Supabase project `jcvrcckeprmpcruhxafm`.
 - p130 spoken callouts while following: traffic, TFR ahead, glidepath deviation (speechSynthesis, S.calloutsOff)
 - p131 approach debrief: follow mode records the flight's track (track.rec); brief card compares the final approach with the published glidepath, stabilized gates at 1,000 and 500 ft
 - p132 save charts for an area (Tools menu): separate never trimmed cache aerosignal-region-v1 served first by sw.js, S.chartAreas
-- p133 privacy page sentence for the phone and tablet apps (approved October 22, 2026)
-- p134 Pro plan switch (AeroPro reads entitlements, ENFORCE off so all features stay free) and flight school dashboard (schools, school_members, school_shares; Account panel, Share on the brief, #/school/<id>). School UI is hidden until SCHOOLS_LIVE is set with its privacy sentence; window.AERO_SCHOOL_PREVIEW = true shows it for testing. Pro sold in the iOS app must use Apple In-App Purchase.
+- p133 privacy page sentences for the phone and tablet apps and for flight school sharing (approved October 22, 2026)
+- p134 Pro plan switch (AeroPro reads entitlements, ENFORCE off so all features stay free) and flight school dashboard (schools, school_members, school_shares; Account panel, Share on the brief, #/school/<id>). School UI is live (SCHOOLS_LIVE); its privacy sentence is in p133. Pro sold in the iOS app must use Apple In-App Purchase.
 - p129 ADS-B In groundwork: GDL 90 decoder and encoder, traffic layer, Traffic simulator in the map Tools menu (AeroMapTools hook in p123); live feed only in the native app (`native/`, plugin `aero-gdl90`)
 
 Brief panel order (each module places itself next to one neighbor; never position against a

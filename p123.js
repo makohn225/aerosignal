@@ -3,7 +3,7 @@
    Satellite: a Satellite base layer (Esri World Imagery with place names and roads) on every map
    that has the chart choices, so pilots can look at fields, roads and clearings.
    Measure, like ForeFlight: hold two fingers still on the map for a moment and a line appears
-   between them with the distance and true course; move your fingers to adjust, lift to keep it on
+   between them with the distance and magnetic course (p124); move your fingers to adjust, lift to keep it on
    screen for a few seconds. The Tools menu also has Measure distance (tap points; each leg and the
    total) and Measure landing zone (tap the corners; each side in feet and meters, the length and
    width, and the area). Points can be dragged.
@@ -75,7 +75,8 @@
   function brg(a, b) { const p1 = a.lat * R, p2 = b.lat * R, dl = (b.lng - a.lng) * R; const y = Math.sin(dl) * Math.cos(p2), x = Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dl); return (Math.atan2(y, x) / R + 360) % 360; }
   const FT = 6076.12;
   const len = (nm) => nm < 0.5 ? `${Math.round(nm * FT).toLocaleString()} ft (${Math.round(nm * 1852).toLocaleString()} m)` : `${nm < 10 ? nm.toFixed(1) : Math.round(nm)} nm`;
-  const crs = (d) => `${String(Math.round(d) % 360 || 360).padStart(3, "0")}°T`;
+  // Magnetic course (p124) when available, true otherwise
+  const crs = (d, at) => { const M = window.AeroMag; const v = M && at ? M.magOf(d, at.lat, at.lng) : d; return `${String(Math.round(v) % 360 || 360).padStart(3, "0")}°${M && at ? "M" : "T"}`; };
   function areaFt2(pts) { // small polygons: local flat projection in feet
     if (pts.length < 3) return 0;
     const o = pts[0], k = Math.cos(o.lat * R);
@@ -98,7 +99,7 @@
       L.polyline([a, b], { color: "#fff", weight: 3, dashArray: "8 6", interactive: false }).addTo(g);
       for (const p of [a, b]) L.circleMarker(p, { radius: 7, color: "#3DE0FF", weight: 3, fillColor: "#fff", fillOpacity: 1, interactive: false }).addTo(g);
       const d = dist(a, b);
-      label(map, L.latLng((a.lat + b.lat) / 2, (a.lng + b.lng) / 2), `${len(d)} · ${crs(brg(a, b))}`, true).addTo(g);
+      label(map, L.latLng((a.lat + b.lat) / 2, (a.lng + b.lng) / 2), `${len(d)} · ${crs(brg(a, b), a)}`, true).addTo(g);
     }
     el.addEventListener("touchstart", (e) => {
       clearTimeout(keep);
@@ -161,7 +162,7 @@
       for (let i = 0; i < ring.length - 1; i++) {
         const a = ring[i], b = ring[i + 1], d = dist(a, b);
         const mid = L.latLng((a.lat + b.lat) / 2, (a.lng + b.lng) / 2);
-        label(map, mid, lz ? `${Math.round(d * FT).toLocaleString()} ft` : `${len(d)} · ${crs(brg(a, b))}`).addTo(g);
+        label(map, mid, lz ? `${Math.round(d * FT).toLocaleString()} ft` : `${len(d)} · ${crs(brg(a, b), a)}`).addTo(g);
       }
       pts.forEach((p, i) => {
         const m = L.marker(p, { draggable: true, icon: L.divIcon({ className: "", iconSize: [16, 16], iconAnchor: [8, 8], html: '<div class="ms-pt"></div>' }) }).addTo(g);
@@ -181,7 +182,7 @@
       }
       if (pts.length < 2) return "Tap points on the map to measure.";
       let tot = 0; for (let i = 1; i < pts.length; i++) tot += dist(pts[i - 1], pts[i]);
-      return `Total <b>${len(tot)}</b>${pts.length > 2 ? ` over ${pts.length - 1} legs` : ` · ${crs(brg(pts[0], pts[1]))}`}`;
+      return `Total <b>${len(tot)}</b>${pts.length > 2 ? ` over ${pts.length - 1} legs` : ` · ${crs(brg(pts[0], pts[1]), pts[0])}`}`;
     }
     function paintBar() {
       if (!bar) {

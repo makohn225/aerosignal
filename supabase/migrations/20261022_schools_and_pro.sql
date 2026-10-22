@@ -1,4 +1,4 @@
--- PROPOSED, NOT APPLIED. Needs the owner's approval before it runs (database schema change).
+-- Approved by the owner on October 22, 2026 and applied as migration schools_and_pro.
 -- Flight school dashboard and the Pro subscription switch.
 --
 -- Schools: an instructor creates a school and shares a join code. A student who joins can choose,
@@ -22,6 +22,7 @@ create table public.school_members (
   school_id uuid not null references public.schools(id) on delete cascade,
   user_id uuid not null references auth.users(id) on delete cascade,
   role text not null check (role in ('instructor', 'student')),
+  display_name text check (char_length(display_name) <= 80),
   joined_at timestamptz not null default now(),
   primary key (school_id, user_id)
 );
@@ -31,6 +32,7 @@ create table public.school_shares (
   school_id uuid not null references public.schools(id) on delete cascade,
   user_id uuid not null references auth.users(id) on delete cascade,
   flight_id text not null,
+  student_name text check (char_length(student_name) <= 80),
   route text,
   dep_at timestamptz,
   verdict text check (verdict in ('GO', 'CAUTION', 'NO GO')),
@@ -68,6 +70,8 @@ create policy schools_member_read on public.schools for select using (exists (se
 -- members: a user sees their own memberships; instructors see their school's roster; a user can leave
 create policy members_self_read on public.school_members for select using (user_id = auth.uid() or public.is_school_instructor(school_id));
 create policy members_self_delete on public.school_members for delete using (user_id = auth.uid() or public.is_school_instructor(school_id));
+-- the owner can change a member's role (make an instructor)
+create policy members_owner_update on public.school_members for update using (exists (select 1 from public.schools k where k.id = school_id and k.owner = auth.uid())) with check (role in ('instructor', 'student'));
 -- joining happens through a security definer function that checks the join code (not a direct insert)
 
 -- shares: a student writes and deletes their own; instructors read their school's
@@ -80,18 +84,18 @@ create policy shares_read on public.school_shares for select using (user_id = au
 create policy ent_read_own on public.entitlements for select using (user_id = auth.uid());
 
 -- join a school by code
-create or replace function public.join_school(code text) returns uuid
+create or replace function public.join_school(code text, p_name text default null) returns uuid
 language plpgsql security definer set search_path = public as $$
 declare s uuid;
 begin
   select id into s from public.schools where join_code = upper(trim(code));
   if s is null then raise exception 'No school with that code'; end if;
-  insert into public.school_members (school_id, user_id, role) values (s, auth.uid(), 'student')
-    on conflict (school_id, user_id) do nothing;
+  insert into public.school_members (school_id, user_id, role, display_name) values (s, auth.uid(), 'student', left(p_name, 80))
+    on conflict (school_id, user_id) do update set display_name = coalesce(excluded.display_name, school_members.display_name);
   return s;
 end $$;
-revoke all on function public.join_school(text) from public;
-grant execute on function public.join_school(text) to authenticated;
+revoke all on function public.join_school(text, text) from public;
+grant execute on function public.join_school(text, text) to authenticated;
 
 -- leaving a school removes what the student shared with it
 create or replace function public.school_member_left() returns trigger
@@ -101,3 +105,23 @@ begin
   return old;
 end $$;
 create trigger school_member_left after delete on public.school_members for each row execute function public.school_member_left();
+
+-- the owner of a new school is its first instructor
+create or replace function public.school_created() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  insert into public.school_members (school_id, user_id, role) values (new.id, new.owner, 'instructor') on conflict do nothing;
+  return new;
+end $$;
+create trigger school_created after insert on public.schools for each row execute function public.school_created();
+revoke all on function public.school_created() from public;
+revoke all on function public.school_member_left() from public;
+revoke all on function public.is_school_instructor(uuid) from public;
+grant execute on function public.is_school_instructor(uuid) to authenticated;
+
+-- follow up (migration schools_and_pro_grants): trigger functions are not callable through the API,
+-- and signed out visitors cannot join schools or call the helper
+revoke execute on function public.school_created() from anon, authenticated;
+revoke execute on function public.school_member_left() from anon, authenticated;
+revoke execute on function public.join_school(text, text) from anon;
+revoke execute on function public.is_school_instructor(uuid) from anon;

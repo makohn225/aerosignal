@@ -35,3 +35,17 @@ Edge functions deploy to Supabase project `jcvrcckeprmpcruhxafm`.
   unclassified sources.
 - Database schema changes and changes to the agreement, terms, privacy or About text need the
   owner's approval.
+
+## Recent modules (October 2026)
+
+- p78 flight track debrief, p79 turbulence and icing, p80 low level route card, p81 AI connector panel
+- p82 Vercel Web Analytics and privacy wording (approved), p83 runway winds and density altitude
+- p84 diversion airports (edge function `divert`), p85 advisory map layer plus tour and tutorial lines
+- p86 takeoff and landing distance check (pilot entered POH figures), p87 display themes (`AeroTheme`)
+- p88 brief Essentials view (`S.briefAll`), p89 logbook finder with single entry edit and print
+- p90 top of climb and descent, best altitude for wind, glide reach map layer (`S.vnav`)
+- p91 share a flight by link (`#/share/<data>`), p92 airspace along the route (FAA ADDS Class and SUA)
+
+Brief panel order (each module places itself next to one neighbor; never position against a
+neighbor another module already uses): bbody, dbPanel, wtgPanel, trkPanel, rwPanel, dvPanel, pfPanel,
+llPanel, lcPanel, wbPanel, goPanel, pkPanel, tfrPanel, ntPanel, advPanel, asPanel, pmPanel, waPanel, mnPanel.

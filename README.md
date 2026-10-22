@@ -28,6 +28,11 @@ cd dist && python3 -m http.server 8794
 Production deploys automatically from the main branch of this repository through Vercel (project `aerosignal-app`). Every push to main publishes the site.
 Edge functions deploy to Supabase project `jcvrcckeprmpcruhxafm`.
 
+## Phone and tablet apps
+
+`native/` holds the Capacitor 7 iOS and Android projects and the `aero-gdl90` UDP plugin. See
+`native/README.md`. The website build ignores this folder (`.vercelignore`).
+
 ## Rules that never change
 
 - No CUI or classified information enters the system. Disclaimers stay bold and red.
@@ -74,6 +79,8 @@ Edge functions deploy to Supabase project `jcvrcckeprmpcruhxafm`.
 - p126 Follow my aircraft (live GPS ownship, trail, GS/track/GPS altitude, recenter, wake lock) and tighter plate georeference (reference points moved onto the plan view from the FAA Lambert projection)
 - p127 approach profile while following: 3 degree reference path to the nearest aligned runway (rwyends function, OurAirports), high or low and left or right readout
 - p112 tutorial scene for the verdict and recorded narration for the newer tutorial lines
+- p128 FAA Terminal Area Chart overlay (shown with the sectional, S.tacOff) and published glidepaths for the approach profile from the FAA CIFP (edge function `cifp`, cached on the device in S.cifp)
+- p129 ADS-B In groundwork: GDL 90 decoder and encoder, traffic layer, Traffic simulator in the map Tools menu (AeroMapTools hook in p123); live feed only in the native app (`native/`, plugin `aero-gdl90`)
 
 Brief panel order (each module places itself next to one neighbor; never position against a
 neighbor another module already uses): bbody, dbPanel, wtgPanel, trkPanel, rwPanel, dvPanel, pfPanel,

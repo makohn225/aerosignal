@@ -257,6 +257,7 @@
           ["me", "My location", "Center the map on you"],
           window.AeroPointTools ? ["pt", "Range rings and position", "Or press and hold anywhere on the map"] : null,
           map._rr && map._rr.getLayers().length ? ["rrx", "Clear range rings", "Remove every ring on this map"] : null,
+          ...(window.AeroMapTools ? AeroMapTools.items(map) : []), // added by later modules (p129 ADS-B)
         ];
         return list.filter((x, i) => x || i === 2);
       };
@@ -272,6 +273,7 @@
           else if (t === "me") locate(map);
           else if (t === "pt") map.fire("contextmenu", { latlng: map.getCenter(), originalEvent: {} });
           else if (t === "rrx" && window.AeroPointTools) AeroPointTools.clearRings(map);
+          else if (window.AeroMapTools) AeroMapTools.run(t, map);
         }));
       };
       btn.onclick = () => { const o = !d.classList.contains("open"); if (o) paint(); d.classList.toggle("open", o); btn.setAttribute("aria-expanded", String(o)); };

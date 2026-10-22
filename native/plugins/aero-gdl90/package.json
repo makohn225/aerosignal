@@ -1,0 +1,9 @@
+{
+  "name": "aero-gdl90",
+  "version": "0.1.0",
+  "description": "AeroSignal: receive GDL 90 ADS-B messages over UDP from a portable receiver (Stratux, Sentry and others)",
+  "main": "index.js",
+  "license": "UNLICENSED",
+  "private": true,
+  "capacitor": { "ios": { "src": "ios" }, "android": { "src": "android" } }
+}

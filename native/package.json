@@ -1,0 +1,21 @@
+{
+  "name": "aerosignal-native",
+  "private": true,
+  "version": "1.0.0",
+  "description": "AeroSignal iOS and Android apps (Capacitor shell around the web app in ../dist)",
+  "scripts": {
+    "web": "cd .. && node build.mjs && rm -rf native/www && cp -r dist native/www",
+    "sync": "npm run web && npx cap sync",
+    "android": "npm run sync && npx cap open android",
+    "ios": "npm run sync && npx cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/android": "7.6.9",
+    "@capacitor/core": "7.6.9",
+    "@capacitor/ios": "7.6.9",
+    "aero-gdl90": "file:plugins/aero-gdl90"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "7.6.9"
+  }
+}

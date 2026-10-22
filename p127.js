@@ -4,7 +4,8 @@
    function, OurAirports data), a small profile appears on the map: a 3 degree reference path down
    to 50 ft over the threshold, your aircraft on it from GPS distance and GPS altitude, how far you
    are high or low of that path, and how far left or right of the extended centerline.
-   It is a reference path from runway data, not the published glidepath or vertical guidance, and
+   Where p128 has the FAA's published procedure data the path is the published glidepath angle and
+   threshold crossing height instead. It is not vertical guidance, and
    GPS altitude on a phone can be off by a hundred feet or more. Fly the approach chart. */
 (function () {
   if (typeof L === "undefined") return;
@@ -18,6 +19,7 @@
     .ap-prof .d{color:#ff4d6a;font-weight:700;font-size:10.5px;margin-top:4px}
   `;
   document.head.appendChild(css);
+  const h = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const R = Math.PI / 180, FT = 6076.12, TAN3 = Math.tan(3 * R);
   function dist(a, b) { const p1 = a.lat * R, p2 = b.lat * R, dp = p2 - p1, dl = (b.lng - a.lng) * R; const x = Math.sin(dp / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) ** 2; return 2 * 3440.065 * Math.asin(Math.min(1, Math.sqrt(x))); }
   function brg(a, b) { const p1 = a.lat * R, p2 = b.lat * R, dl = (b.lng - a.lng) * R; const y = Math.sin(dl) * Math.cos(p2), x = Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dl); return (Math.atan2(y, x) / R + 360) % 360; }
@@ -64,29 +66,36 @@
     }
     return best;
   }
-  function panel(map, a, fix) {
+  function panel(map, a, fix) { // a may be replaced with the published threshold below
     let el = map.getContainer().querySelector(".ap-prof");
     if (!a) { if (el) el.remove(); return; }
     if (!el) { el = L.DomUtil.create("div", "ap-prof", map.getContainer()); L.DomEvent.disableClickPropagation(el); }
-    const pathAlt = (a.elev || 0) + 50 + TAN3 * a.along * FT;
+    // Published glidepath from the FAA procedure data when p128 has it, else the 3 degree reference
+    const vp = window.AeroApproach && AeroApproach.vpath ? AeroApproach.vpath(a) : null;
+    if (vp && vp.thr && fix.ll) {
+      const d = dist(vp.thr, fix.ll), off = adiff(brg(vp.thr, fix.ll), (a.crs + 180) % 360);
+      a = { ...a, along: d * Math.cos(off * R), lat: -d * Math.sin(off * R), elev: vp.elev != null ? vp.elev : a.elev };
+    }
+    const gpa = vp ? vp.gpa : 3, tch = vp ? vp.tch : 50, TANP = Math.tan(gpa * R);
+    const pathAlt = (a.elev || 0) + tch + TANP * a.along * FT;
     const alt = fix.alt;
     const dev = alt != null ? alt - pathAlt : null;
     const cls = dev == null ? "" : Math.abs(dev) <= 150 ? "ok" : Math.abs(dev) <= 400 ? "warn" : "bad";
     // Profile drawing: runway at the right, distance to the left
-    const W = 280, H = 84, maxNm = Math.max(5, Math.ceil(a.along + 1)), top = (a.elev || 0) + 50 + TAN3 * maxNm * FT;
+    const W = 280, H = 84, maxNm = Math.max(5, Math.ceil(a.along + 1)), top = (a.elev || 0) + tch + TANP * maxNm * FT;
     const minAlt = (a.elev || 0) - 100, maxAlt = Math.max(top, alt || 0) + 300;
     const X = (nm) => W - 8 - (nm / maxNm) * (W - 20), Y = (ft) => H - 8 - ((ft - minAlt) / (maxAlt - minAlt)) * (H - 16);
     const ticks = []; for (let n = 1; n < maxNm; n++) if (maxNm <= 6 || n % 2 === 0) ticks.push(`<line x1="${X(n)}" y1="${H - 8}" x2="${X(n)}" y2="${H - 4}" stroke="#9db2ce"/><text x="${X(n)}" y="${H}" text-anchor="middle" font-size="8" fill="#9db2ce">${n}</text>`);
     const lr = Math.abs(a.lat) < 0.05 ? "on the extended centerline" : `${Math.abs(a.lat).toFixed(1)} nm ${a.lat > 0 ? "right" : "left"} of the extended centerline`;
-    el.innerHTML = `<div class="t"><span>${a.ap} RWY ${a.rwy} · 3° reference</span><span>${a.along.toFixed(1)} nm</span></div>
+    el.innerHTML = `<div class="t"><span>${a.ap} ${vp ? h(vp.name) + " · " + String(+gpa.toFixed(2)) + "°" : "RWY " + a.rwy + " · 3° reference"}</span><span>${a.along.toFixed(1)} nm</span></div>
       <svg viewBox="0 0 ${W} ${H}"><line x1="0" y1="${Y(a.elev || 0)}" x2="${W}" y2="${Y(a.elev || 0)}" stroke="rgba(255,255,255,.2)"/>
         <rect x="${X(0) - 2}" y="${Y(a.elev || 0) - 2}" width="10" height="4" fill="#EAF2FF"/>
-        <line x1="${X(0)}" y1="${Y((a.elev || 0) + 50)}" x2="${X(maxNm)}" y2="${Y(top)}" stroke="#3DE0FF" stroke-width="2" stroke-dasharray="5 4"/>
+        <line x1="${X(0)}" y1="${Y((a.elev || 0) + tch)}" x2="${X(maxNm)}" y2="${Y(top)}" stroke="#3DE0FF" stroke-width="2" stroke-dasharray="5 4"/>
         ${ticks.join("")}
         ${alt != null ? `<circle cx="${X(Math.min(a.along, maxNm))}" cy="${Y(alt)}" r="5" fill="#FFD23F" stroke="#000"/>` : ""}</svg>
-      <div class="big ${cls}">${dev == null ? "No GPS altitude" : Math.abs(dev) < 50 ? "On the 3° path" : `${Math.round(Math.abs(dev) / 10) * 10} ft ${dev > 0 ? "high" : "low"}`}</div>
+      <div class="big ${cls}">${dev == null ? "No GPS altitude" : Math.abs(dev) < 50 ? `On the ${vp ? "published" : "3°"} path` : `${Math.round(Math.abs(dev) / 10) * 10} ft ${dev > 0 ? "high" : "low"}`}</div>
       <div>${lr}${dev != null ? ` · path ${Math.round(pathAlt / 10) * 10} ft, you ${Math.round(alt / 10) * 10} ft GPS` : ""}</div>
-      <div class="d">Reference path from runway data, not the published glidepath. GPS altitude can be off. Fly the chart.</div>`;
+      <div class="d">${vp ? `Published glidepath from FAA procedure data (cycle ${h(vp.cycle || "")}), shown against GPS altitude. Not vertical guidance.` : "Reference path from runway data, not the published glidepath."} GPS altitude can be off. Fly the chart.</div>`;
   }
   L.Map.addInitHook(function () {
     const map = this;

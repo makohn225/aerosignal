@@ -70,6 +70,7 @@ Edge functions deploy to Supabase project `jcvrcckeprmpcruhxafm`.
 - p122 privacy page paragraph for flight alerts (approved October 22, 2026), Last updated October 22, 2026
 - p123 easier map: Satellite base layer, two finger hold to measure, Tools menu (measure distance, measure landing zone, edit route, plates, glide, my location), folded filters and patterns
 - p124 magnetic variation from IGRF 14 on the device (AeroMag): measure tools show °M, kneeboard variation fills in, civil card lists variation
+- p125 press and hold (or right click) on any map: position report from the nearest VOR and airport (nearfix only=report), range rings 5/10/25 nm, measure from here
 - p112 tutorial scene for the verdict and recorded narration for the newer tutorial lines
 
 Brief panel order (each module places itself next to one neighbor; never position against a

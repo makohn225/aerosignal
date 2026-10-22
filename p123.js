@@ -180,7 +180,7 @@
         const area = areaFt2(pts), longest = Math.max(...sides), width = area / longest;
         return `Landing zone about <b>${Math.round(longest).toLocaleString()} × ${Math.round(width).toLocaleString()} ft</b> (${Math.round(longest * 0.3048).toLocaleString()} × ${Math.round(width * 0.3048).toLocaleString()} m), ${area >= 43560 ? `${area >= 435600 ? Math.round(area / 43560).toLocaleString() : (area / 43560).toFixed(1)} acres` : `${Math.round(area).toLocaleString()} sq ft`}.`;
       }
-      if (pts.length < 2) return "Tap points on the map to measure.";
+      if (pts.length < 2) return pts.length ? "Now tap the next point." : "Tap points on the map to measure.";
       let tot = 0; for (let i = 1; i < pts.length; i++) tot += dist(pts[i - 1], pts[i]);
       return `Total <b>${len(tot)}</b>${pts.length > 2 ? ` over ${pts.length - 1} legs` : ` · ${crs(brg(pts[0], pts[1]), pts[0])}`}`;
     }
@@ -221,7 +221,7 @@
       redraw();
     }, true);
     map.on("unload", stop);
-    return { start, stop, active: () => !!mode };
+    return { start, stop, active: () => !!mode, add: (p) => { if (!mode) return; pts.push(p); redraw(); } };
   }
 
   /* My location */
@@ -255,6 +255,8 @@
           has(".gl-btn") ? ["glide", "Glide from me", "Your gliding range from GPS"] : null,
           has(".gl-btn") ? ["glset", "Climb, descent and glide settings", "Used for TOC, TOD and glide range"] : null,
           ["me", "My location", "Center the map on you"],
+          window.AeroPointTools ? ["pt", "Range rings and position", "Or press and hold anywhere on the map"] : null,
+          map._rr && map._rr.getLayers().length ? ["rrx", "Clear range rings", "Remove every ring on this map"] : null,
         ];
         return list.filter((x, i) => x || i === 2);
       };
@@ -268,6 +270,8 @@
           else if (t === "plates") { const e = C.querySelector(".pl-btn a"); if (e) e.click(); }
           else if (t === "glide" || t === "glset") { const a = C.querySelectorAll(".gl-btn a"); const e = a[t === "glide" ? 0 : 1]; if (e) e.click(); }
           else if (t === "me") locate(map);
+          else if (t === "pt") map.fire("contextmenu", { latlng: map.getCenter(), originalEvent: {} });
+          else if (t === "rrx" && window.AeroPointTools) AeroPointTools.clearRings(map);
         }));
       };
       btn.onclick = () => { const o = !d.classList.contains("open"); if (o) paint(); d.classList.toggle("open", o); btn.setAttribute("aria-expanded", String(o)); };

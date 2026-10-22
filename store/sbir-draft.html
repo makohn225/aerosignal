@@ -1,0 +1,80 @@
+<html><body>
+<h1>AeroSignal SBIR Phase I Proposal Draft</h1>
+<p><b>Working title:</b> Mishap Informed Preflight Risk Briefing and Approach Debrief for Military Aircrew</p>
+<p><b>Status:</b> draft technical volume, written so it can be fitted to a matching topic when one opens. No topic in the Department of War SBIR and STTR FY27 Release 1 (open October 28, closing November 25, 2026) is a direct fit; the closest is DAF27TZ01 DV001, an automated pilot debrief for air to air refueling, which is narrower. Release 2 pre-release is November 4, 2026. Watch for an Air Force or Navy open topic, or a safety, human factors or aircrew decision support topic, and adapt sections 1 and 2 to its wording.</p>
+<p><b>Unclassified. Contains no CUI.</b> Military mishap information below comes only from public reporting.</p>
+
+<h2>Before you can submit</h2>
+<ul>
+<li><b>Principal investigator rule:</b> SBIR requires the principal investigator to be primarily employed by the small business (more than half of their time) during the award. While you work full time at another company, someone else would need to be the PI, or your employment would need to change before award. This is the biggest gap to solve.</li>
+<li><b>Outside activity approval</b> from your current employer, in writing.</li>
+<li><b>Registrations:</b> the LLC formed; SAM.gov registration with a UEI and CAGE code; the SBA company registry; a DSIP account for submission. SAM.gov can take several weeks.</li>
+<li><b>A government customer:</b> a letter or memo of interest from a squadron, wing or safety office makes a Phase I much stronger and is required for some open topics.</li>
+<li><b>Fundamental research and data rules:</b> confirm the topic allows a commercial software approach and public data only.</li>
+</ul>
+
+<h2>1. Identification and significance of the problem</h2>
+<p>Military aviation keeps repeating its mishaps. Public reporting shows that Class A aviation mishaps across the services in 2026 had already passed the 2025 total by late July, and that Class A losses since 2020 come to more than $8 billion, with many lives lost. Public mishap summaries keep describing causes that have been seen before: misjudged approaches, continued flight into degraded weather, task saturation during unfamiliar profiles, and fuel and configuration errors.</p>
+<p>The lessons exist. They sit in safety center publications, public investigation summaries and, for civil aircraft, more than 24,000 NTSB accident records with narratives. What aircrew lack is time. A pilot preparing a local training sortie has minutes, not hours, and today's tools do not connect the planned profile (route, aircraft, phase of flight, time of day, weather) to the specific lessons that apply to it. Operational risk management worksheets capture general risk, but they do not show the pilot "this is what has gone wrong on flights like yours, and this is what to do about it."</p>
+<p>The same gap exists after flight. Squadrons debrief from memory or from data that takes days to process. A simple, immediate comparison of the flown approach against the published path, with stabilized approach gates, would let instructors catch unstable approach habits early, before they show up in a mishap.</p>
+
+<h2>2. Phase I technical objectives</h2>
+<ol>
+<li><b>Relevance:</b> show that a planned training sortie can be matched to relevant public mishap lessons automatically, and that aircrew rate the resulting brief as relevant and actionable. Target: at least 70% of lessons rated relevant by participating aircrew.</li>
+<li><b>Speed:</b> produce the brief, with a GO, CAUTION or NO GO verdict and its reasons, in under 60 seconds from a route file or typed plan. Target: median under 30 seconds.</li>
+<li><b>Fit with existing tools:</b> accept routes exported from current mission planning and EFB tools (GPX and Garmin FPL already work), and extend the existing TAK data package export so the brief's hazards and lessons appear in TAK clients as Cursor on Target items.</li>
+<li><b>Debrief accuracy:</b> measure the approach debrief against reference tracks with known altitude and position. Target: glidepath deviation within 50 ft of the reference when the input altitude is accurate, and clear reporting of the error that comes from phone GPS altitude.</li>
+<li><b>Security path:</b> confirm a design that keeps all data unclassified and public, stores personal data on the device, and can move to a government authorized cloud in Phase II.</li>
+</ol>
+
+<h2>3. Phase I statement of work (six months)</h2>
+<ol>
+<li><b>Month 1, kickoff and requirements:</b> meet the government customer; agree on two or three sortie profiles to study (for example local VFR pattern work, night unaided training, low level route); confirm data sources are public.</li>
+<li><b>Months 1 to 3, mishap matching:</b> expand the public military narrative set from safety center publications and public investigation summaries; tune matching for the agreed profiles; add aircraft type families used by the customer, using only public, unclassified performance data.</li>
+<li><b>Months 2 to 4, integration:</b> route import from the customer's planning tool exports; lessons and hazards added to the existing TAK data package export; a printable kneeboard brief.</li>
+<li><b>Months 3 to 5, user evaluation:</b> 20 aircrew brief real or representative sorties with AeroSignal; collect relevance ratings, time to brief and qualitative feedback; instructors use the approach debrief on recorded tracks.</li>
+<li><b>Month 6, final report:</b> results against each objective, a Phase II plan, and a demonstration to the customer.</li>
+</ol>
+
+<h2>4. Related work</h2>
+<p>AeroSignal is a working product today, built by the proposer: a web app (with iPhone, iPad and Android apps in preparation) that delivers mishap matched briefs, a verdict, FAA charts, airway routing, a nav log, weight and balance, live GPS following, an approach profile using the FAA published glidepath, spoken callouts for traffic, TFRs and the glidepath, and an approach debrief. Commercial electronic flight bags (ForeFlight, Garmin Pilot) lead in charts and navigation but do not build a mishap based brief from the planned flight. Flight data monitoring programs analyze recorded data after the fact for operators with instrumented fleets; AeroSignal works before flight and from a phone track after it, with no aircraft modification.</p>
+
+<h2>5. Relationship with future research (Phase II and III)</h2>
+<p>Phase II would deliver a version hosted in a government authorized environment, connect to the customer's safety data where policy allows, add squadron level views for safety officers and instructors (trends in briefed risks and debrief results, without punitive use), add live ADS-B and receiver data in the phone apps, and run a larger evaluation across multiple units. Phase III would offer AeroSignal to military units, flight schools and civil operators as a subscription and as a licensed module for existing EFB and mission planning tools.</p>
+
+<h2>6. Commercialization strategy</h2>
+<p>AeroSignal already has a civil product and a pricing plan: a free core brief, a Pro subscription at $10 per month or $99 per year, and flight school licenses at $49 per month. The U.S. has more than 887,000 active pilot certificates. Government sales would follow as unit licenses or enterprise agreements after Phase II. The civil business keeps the product improving between government contracts, and government work strengthens the safety content for every user.</p>
+
+<h2>7. Key personnel</h2>
+<p><b>Mario Kohn, founder</b> (PI if the employment rule above is resolved): medically retired Marine Corps Major with 10 years of active duty; MV-22B pilot across multiple squadrons; squadron Operations Officer; squadron Director of Safety and Standardization and Aviation Safety Officer; Aviation Safety Officer and Action Officer at the HQMC Risk Management Directorate; Expeditionary Warfare School graduate; B.S. in Systems Engineering, U.S. Naval Academy; PMP certified; now working in aviation human factors. Designed and built AeroSignal.</p>
+<p><b>Planned:</b> a contract mobile developer, and a human factors evaluator for the user study.</p>
+
+<h2>8. Foreign citizens</h2>
+<p>None planned.</p>
+
+<h2>9. Facilities and equipment</h2>
+<p>Commercial cloud hosting (Vercel and Supabase) for the unclassified prototype; development computers; test phones and tablets; a portable ADS-B receiver for testing. No classified facility is needed or used.</p>
+
+<h2>10. Subcontractors and consultants</h2>
+<p>A contract mobile developer (about 400 hours) and a human factors evaluator (about 80 hours), to be named before submission.</p>
+
+<h2>11. Prior, current or pending support</h2>
+<p>None.</p>
+
+<h2>Draft cost summary, about $75,000 for six months</h2>
+<ul>
+<li>Principal investigator labor, about 500 hours: $40,000</li>
+<li>Contract mobile developer, about 400 hours: $24,000</li>
+<li>Human factors evaluator, about 80 hours: $8,000</li>
+<li>Travel to the customer for kickoff and the evaluation: $2,000</li>
+<li>Test devices and ADS-B receiver: $1,000</li>
+<li>Total: $75,000 (adjust to the topic's ceiling; add indirect costs and fee only if the topic allows and your accountant advises)</li>
+</ul>
+
+<h2>Sources</h2>
+<ul>
+<li>Scripps News, "Severe non combat military aviation mishaps up from 2025, data shows," July 29, 2026, citing the Army Combat Readiness Center, Naval Safety Command and Air Force Safety Center.</li>
+<li>FAA 2025 U.S. Civil Airmen Statistics, as reported by FLYING Magazine, April 10, 2026.</li>
+<li>Department of War SBIR and STTR FY27 Release 1 topic list (pre-release October 7, 2026).</li>
+</ul>
+</body></html>

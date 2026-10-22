@@ -51,6 +51,7 @@ Edge functions deploy to Supabase project `jcvrcckeprmpcruhxafm`.
   p100 Flights folds procedure panels, p101 bottom line problems first, p102 shorter Logbook,
   p103 More page groups, p104 role based tabs (`S.role`: civil hides Missions)
 - p105 brief sections open folded with a one line summary; bottom line ranked items capped at 3
+- p106 accident lessons as one line titles that open on tap; currency box folds when the bottom line lists it
 
 Brief panel order (each module places itself next to one neighbor; never position against a
 neighbor another module already uses): bbody, dbPanel, wtgPanel, trkPanel, rwPanel, dvPanel, pfPanel,

@@ -60,6 +60,12 @@ Edge functions deploy to Supabase project `jcvrcckeprmpcruhxafm`.
 - p111 checklists in account sync (on; privacy wording approved October 21, 2026)
 - p113 privacy page sync paragraph adds checklists (approved October 21, 2026)
 - p114 animated tutorial: scene animation per step, chapter cards, gliding spotlight, finish card
+- p115 Today card on the Plan page: next flight, countdown, last verdict, recheck prompt
+- p116 "Did you fly it?" one tap logbook entry from the plan (or track)
+- p117 Fly again, Add to calendar (.ics), import .fpl or .gpx flight plans
+- p118 civil kneeboard card #/card with runways, frequencies (freq function, OurAirports), weather, CRAFT pad
+- p119 passenger briefing (SAFETY) dialog and card section
+- p120 brief remembers its verdict (f.vd) and shows what changed since the last check
 - p112 tutorial scene for the verdict and recorded narration for the newer tutorial lines
 
 Brief panel order (each module places itself next to one neighbor; never position against a

@@ -59,6 +59,7 @@ Edge functions deploy to Supabase project `jcvrcckeprmpcruhxafm`.
 - p110 automatic offline save for flights departing within 12 hours (S.offAuto, S.offAutoDone)
 - p111 checklists in account sync (on; privacy wording approved October 21, 2026)
 - p113 privacy page sync paragraph adds checklists (approved October 21, 2026)
+- p114 animated tutorial: scene animation per step, chapter cards, gliding spotlight, finish card
 - p112 tutorial scene for the verdict and recorded narration for the newer tutorial lines
 
 Brief panel order (each module places itself next to one neighbor; never position against a

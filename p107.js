@@ -80,7 +80,9 @@
     } catch (e) { console.error(e); }
     finally { setTimeout(() => (busy = false), 0); }
   }
-  const kick = () => { clearTimeout(t); t = setTimeout(apply, 300); };
+  let first = 0;
+  // Debounce, but never wait more than 0.6 s while the page keeps changing
+  const kick = () => { clearTimeout(t); const now = Date.now(); if (!first) first = now; t = setTimeout(() => { first = 0; apply(); }, Math.max(0, Math.min(300, 600 - (now - first)))); };
   new MutationObserver((l) => { if (busy) return; if (l.every((m) => m.target.closest && m.target.closest("#bfBluf > .vd"))) return; kick(); }).observe(document.getElementById("view") || document.body, { childList: true, subtree: true });
   window.addEventListener("hashchange", kick);
   kick();

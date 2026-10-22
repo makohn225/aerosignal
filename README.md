@@ -47,6 +47,9 @@ Edge functions deploy to Supabase project `jcvrcckeprmpcruhxafm`.
 - p91 share a flight by link (`#/share/<data>`), p92 airspace along the route (FAA ADDS Class and SUA)
 - p93 aircraft inspection due dates (`S.profiles[tail].mx`), p94 add a tracked flight to the logbook
 - p95 checklists page (`#/checklists`, `S.checklists`), p96 stronger Glass cockpit theme
+- Declutter: p97 tutorial button and welcome bar retire, p98 short brief chip bar, p99 top 3 lessons,
+  p100 Flights folds procedure panels, p101 bottom line problems first, p102 shorter Logbook,
+  p103 More page groups, p104 role based tabs (`S.role`: civil hides Missions)
 
 Brief panel order (each module places itself next to one neighbor; never position against a
 neighbor another module already uses): bbody, dbPanel, wtgPanel, trkPanel, rwPanel, dvPanel, pfPanel,

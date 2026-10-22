@@ -109,6 +109,7 @@
       if (follow) { own = true; map.panTo(ll, { animate: true, duration: 0.5 }); setTimeout(() => (own = false), 700); }
       last = fix;
       paintHud(fix);
+      map.fire("aerofix", { fix, trk });
     }
     function start() {
       if (watch != null) { follow = true; if (last) map.panTo(last.ll); paintHud(last); return; }
@@ -125,6 +126,7 @@
       if (mk) { mk.remove(); mk = null; }
       if (trail) { trail.remove(); trail = null; }
       last = null; trk = null;
+      map.fire("aerofixstop");
     }
     map.on("dragstart zoomstart", (e) => { if (watch != null && !own && e.type === "dragstart") { follow = false; paintHud(last); } });
     map.on("unload", stop);

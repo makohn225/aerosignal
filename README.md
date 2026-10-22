@@ -66,6 +66,8 @@ Edge functions deploy to Supabase project `jcvrcckeprmpcruhxafm`.
 - p118 civil kneeboard card #/card with runways, frequencies (freq function, OurAirports), weather, CRAFT pad
 - p119 passenger briefing (SAFETY) dialog and card section
 - p120 brief remembers its verdict (f.vd) and shows what changed since the last check
+- p121 flight alerts: web push (sw.js push handlers), rows in public.flight_alerts (RLS, own rows), alertcheck function run every 15 min by pg_cron job flight-alerts; VAPID keys and cron key in Vault
+- p122 privacy page paragraph for flight alerts (approved October 22, 2026), Last updated October 22, 2026
 - p112 tutorial scene for the verdict and recorded narration for the newer tutorial lines
 
 Brief panel order (each module places itself next to one neighbor; never position against a

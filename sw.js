@@ -3,10 +3,11 @@
    A new version installs in the background as a complete set and the app offers a reload.
    Map tiles and libraries: saved after first use so charts redraw instantly and work with poor signal.
    Live data (weather, TFRs, accidents, airspace) always comes from the network. */
-const CACHE = "aerosignal-shell-v37";
+const CACHE = "aerosignal-shell-v38";
 const TILES = "aerosignal-tiles-v1";
 const LIBS = "aerosignal-libs-v1";
 const CHARTS = "aerosignal-charts-v1";
+const REGION = "aerosignal-region-v1"; // chart areas the pilot saved on purpose (p132), never trimmed here
 const TILE_MAX = 2500;
 const TILE_FRESH = 7 * 864e5;
 const SHELL = ["/", "/manifest.webmanifest", "/styles.css", "/map.css", "/missions.css", "/oa.css", "/alt.css", "/mil.css", "/route.css", "/demo.css", "/acct.css", "/fb.css", "/tour.css", "/sym.css", "/mtab.css", "/kb.css",
@@ -60,6 +61,7 @@ async function trimTiles(c) {
 }
 
 async function tile(req, e) {
+  try { const saved = await (await caches.open(REGION)).match(req.url); if (saved) return saved; } catch (_) {}
   const c = await caches.open(TILES);
   const hit = await c.match(req.url);
   const age = hit ? Date.now() - Number(hit.headers.get("x-as-at") || 0) : Infinity;

@@ -80,6 +80,9 @@ Edge functions deploy to Supabase project `jcvrcckeprmpcruhxafm`.
 - p127 approach profile while following: 3 degree reference path to the nearest aligned runway (rwyends function, OurAirports), high or low and left or right readout
 - p112 tutorial scene for the verdict and recorded narration for the newer tutorial lines
 - p128 FAA Terminal Area Chart overlay (shown with the sectional, S.tacOff) and published glidepaths for the approach profile from the FAA CIFP (edge function `cifp`, cached on the device in S.cifp)
+- p130 spoken callouts while following: traffic, TFR ahead, glidepath deviation (speechSynthesis, S.calloutsOff)
+- p131 approach debrief: follow mode records the flight's track (track.rec); brief card compares the final approach with the published glidepath, stabilized gates at 1,000 and 500 ft
+- p132 save charts for an area (Tools menu): separate never trimmed cache aerosignal-region-v1 served first by sw.js, S.chartAreas
 - p129 ADS-B In groundwork: GDL 90 decoder and encoder, traffic layer, Traffic simulator in the map Tools menu (AeroMapTools hook in p123); live feed only in the native app (`native/`, plugin `aero-gdl90`)
 
 Brief panel order (each module places itself next to one neighbor; never position against a

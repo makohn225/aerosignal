@@ -68,7 +68,7 @@
   }
   function panel(map, a, fix) { // a may be replaced with the published threshold below
     let el = map.getContainer().querySelector(".ap-prof");
-    if (!a) { if (el) el.remove(); return; }
+    if (!a) { if (el) el.remove(); map.fire("aeroapproach", { off: true }); return; }
     if (!el) { el = L.DomUtil.create("div", "ap-prof", map.getContainer()); L.DomEvent.disableClickPropagation(el); }
     // Published glidepath from the FAA procedure data when p128 has it, else the 3 degree reference
     const vp = window.AeroApproach && AeroApproach.vpath ? AeroApproach.vpath(a) : null;
@@ -96,6 +96,8 @@
       <div class="big ${cls}">${dev == null ? "No GPS altitude" : Math.abs(dev) < 50 ? `On the ${vp ? "published" : "3°"} path` : `${Math.round(Math.abs(dev) / 10) * 10} ft ${dev > 0 ? "high" : "low"}`}</div>
       <div>${lr}${dev != null ? ` · path ${Math.round(pathAlt / 10) * 10} ft, you ${Math.round(alt / 10) * 10} ft GPS` : ""}</div>
       <div class="d">${vp ? `Published glidepath from FAA procedure data (cycle ${h(vp.cycle || "")}), shown against GPS altitude. Not vertical guidance.` : "Reference path from runway data, not the published glidepath."} GPS altitude can be off. Fly the chart.</div>`;
+    // For spoken callouts (p130) and the approach debrief (p131)
+    map.fire("aeroapproach", { ap: a.ap, rwy: a.rwy, name: vp ? vp.name : `RWY ${a.rwy}`, published: !!vp, gpa, along: a.along, lat: a.lat, dev, agl: alt != null ? alt - (a.elev || 0) : null, pathAlt, alt });
   }
   L.Map.addInitHook(function () {
     const map = this;

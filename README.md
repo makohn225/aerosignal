@@ -52,6 +52,13 @@ Edge functions deploy to Supabase project `jcvrcckeprmpcruhxafm`.
   p103 More page groups, p104 role based tabs (`S.role`: civil hides Missions)
 - p105 brief sections open folded with a one line summary; bottom line ranked items capped at 3
 - p106 accident lessons as one line titles that open on tap; currency box folds when the bottom line lists it
+- p0 (loads first) faster settling: debounces shortened after the first bottom line card, one redraw at startup
+- p107 GO, CAUTION or NO GO verdict with reasons at the top of the bottom line card
+- p108 Flights and Safety tabs folded into Plan (Your flights list) and Maps (Safety search button)
+- p109 Read and brief: plan text to brief in one step
+- p110 automatic offline save for flights departing within 12 hours (S.offAuto, S.offAutoDone)
+- p111 checklists in account sync (inactive until the privacy wording is approved; APPROVED flag)
+- p112 tutorial scene for the verdict and recorded narration for the newer tutorial lines
 
 Brief panel order (each module places itself next to one neighbor; never position against a
 neighbor another module already uses): bbody, dbPanel, wtgPanel, trkPanel, rwPanel, dvPanel, pfPanel,

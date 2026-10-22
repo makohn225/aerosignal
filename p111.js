@@ -5,7 +5,7 @@
    row as the flights. Inactive until the owner approves the matching privacy page wording; flip
    APPROVED to true together with that wording change. */
 (function () {
-  const APPROVED = false;
+  const APPROVED = true; // privacy wording approved October 21, 2026 (p113)
   if (!APPROVED) return;
   const st = () => (S.ckSync = S.ckSync || { known: [], del: {} });
   const list = () => (Array.isArray(S.checklists) ? S.checklists : (S.checklists = []));

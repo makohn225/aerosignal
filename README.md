@@ -57,7 +57,8 @@ Edge functions deploy to Supabase project `jcvrcckeprmpcruhxafm`.
 - p108 Flights and Safety tabs folded into Plan (Your flights list) and Maps (Safety search button)
 - p109 Read and brief: plan text to brief in one step
 - p110 automatic offline save for flights departing within 12 hours (S.offAuto, S.offAutoDone)
-- p111 checklists in account sync (inactive until the privacy wording is approved; APPROVED flag)
+- p111 checklists in account sync (on; privacy wording approved October 21, 2026)
+- p113 privacy page sync paragraph adds checklists (approved October 21, 2026)
 - p112 tutorial scene for the verdict and recorded narration for the newer tutorial lines
 
 Brief panel order (each module places itself next to one neighbor; never position against a

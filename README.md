@@ -45,6 +45,8 @@ Edge functions deploy to Supabase project `jcvrcckeprmpcruhxafm`.
 - p88 brief Essentials view (`S.briefAll`), p89 logbook finder with single entry edit and print
 - p90 top of climb and descent, best altitude for wind, glide reach map layer (`S.vnav`)
 - p91 share a flight by link (`#/share/<data>`), p92 airspace along the route (FAA ADDS Class and SUA)
+- p93 aircraft inspection due dates (`S.profiles[tail].mx`), p94 add a tracked flight to the logbook
+- p95 checklists page (`#/checklists`, `S.checklists`), p96 stronger Glass cockpit theme
 
 Brief panel order (each module places itself next to one neighbor; never position against a
 neighbor another module already uses): bbody, dbPanel, wtgPanel, trkPanel, rwPanel, dvPanel, pfPanel,

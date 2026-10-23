@@ -188,7 +188,9 @@
       }
     }
     textNodes(view, (v) => (/Enter This aircraft's/.test(v) ? v.replace("Enter This aircraft's", "Enter this aircraft's") : v));
-    if (on(/^#\/account\/?$/)) textNodes(view, (v) => v.replace("Accounts keep your profile for future features like syncing across devices and sharing with your squadron. Your logbook and missions stay on this device for now.", "An account lets you sync your flights across devices, get flight alerts before departure and join a flight school. Without an account, everything stays on this device."));
+    // Approved by the owner on October 22, 2026: no trademark claim until the name is cleared
+    for (const n of view.querySelectorAll(".own-note")) if (/ AeroSignal™ is a trademark\./.test(n.textContent)) n.textContent = n.textContent.replace(" AeroSignal™ is a trademark.", "");
+    if (on(/^#\/account/)) textNodes(view, (v) => v.replace("Accounts keep your profile for future features like syncing across devices and sharing with your squadron. Your logbook and missions stay on this device for now.", "An account lets you sync your flights across devices, get flight alerts before departure and join a flight school. Without an account, everything stays on this device."));
     if (on(/^#\/logbook/)) textNodes(view, (v) => v.replace("Your logbook stays in this browser; it is never uploaded.", "Your logbook stays in this browser unless you turn on account sync."));
   }
   function chip() {

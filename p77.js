@@ -102,7 +102,7 @@
     const planOk = planIdx >= 0 ? good[planIdx] : null;
     const rule = f.rules === "IFR" ? "IFR: nothing LIFR at either end" : "VFR at both ends, nothing worse than MVFR in a TEMPO";
     const winTxt = wins.length
-      ? wins.slice(0, 3).map(([a, b]) => `${day(a)} ${hhmm(a)} to ${hhmm(b)}`).join(", ")
+      ? wins.slice(0, 3).map(([a, b]) => `${day(a)} ${hhmm(a)} to ${day(b) !== day(a) ? day(b) + " " : ""}${hhmm(b)}`).join(", ")
       : "none in the forecast period";
     const planTxt = planIdx < 0 ? "Your planned departure is outside the forecast period."
       : planOk ? `Your planned departure at ${hhmm(depT)} <b class="ok">fits</b>.`

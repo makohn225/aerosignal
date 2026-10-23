@@ -85,6 +85,8 @@ Edge functions deploy to Supabase project `jcvrcckeprmpcruhxafm`.
 - p132 save charts for an area (Tools menu): separate never trimmed cache aerosignal-region-v1 served first by sw.js, S.chartAreas
 - p133 privacy page sentences for the phone and tablet apps and for flight school sharing (approved October 22, 2026)
 - p134 Pro plan switch (AeroPro reads entitlements, ENFORCE off so all features stay free) and flight school dashboard (schools, school_members, school_shares; Account panel, Share on the brief, #/school/<id>). School UI is live (SCHOOLS_LIVE); its privacy sentence is in p133. Pro sold in the iOS app must use Apple In-App Purchase.
+- p135 launch polish from a new pilot audit: Read and brief opens the brief, aircraft type from the plan words, honest bottom line (loading or failed lines never all clear; NOTAM and hazard failures count as CAUTION), civil Plan page without military hints, phone header theme icon, wording fixes (dates, round trips, Account and Logbook intros)
+- p136 Questions and answers page at #/faq with search; linked from More, the Plan welcome card and the public welcome page
 - p129 ADS-B In groundwork: GDL 90 decoder and encoder, traffic layer, Traffic simulator in the map Tools menu (AeroMapTools hook in p123); live feed only in the native app (`native/`, plugin `aero-gdl90`)
 
 Brief panel order (each module places itself next to one neighbor; never position against a

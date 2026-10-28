@@ -19,7 +19,8 @@ the repository.
 
 If a range runs out, take the next free block of 50 above p400 and add it to this table.
 
-p138 (runway closures) and p139 (October 28 pilot feedback) came from the regular chat. The task
+p138 (runway closures) and p139 (October 28 pilot feedback) came from the regular chat. Its p140
+(Go to an airport) was never uploaded; the feature was rebuilt as p152, and p140 is unused. The task
 chat's round 3 polish, first shipped as p138, now lives in p150.
 
 ## Shared files

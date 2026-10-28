@@ -108,7 +108,7 @@
         <label>Type<select id="flType">${TYPES.map(([c, n]) => `<option value="${c}">${h(n)}</option>`).join("")}</select></label></div>
         <div class="row"><button type="button" class="btn sm" id="flAdd">Add airplane</button></div></section>
       <section class="panel share"><h2>Share with students</h2>
-        <p class="small" style="margin:0 0 8px">Send students this link, or the fleet file. Opening it adds these airplanes and their checklists on their device. Nothing is stored on a server.</p>
+        <p class="small" style="margin:0 0 8px">Send students this link, or the fleet file. Opening it adds these airplanes and their checklists on their device. The link and file are not stored on a server. Signed in instructors can also save the fleet with their school, so students get it with their invite.</p>
         <div class="row"><button type="button" class="btn sm" id="flCopy" ${f.tails.length ? "" : "disabled"}>Copy share link</button><button type="button" class="btn sec sm" id="flFile" ${f.tails.length ? "" : "disabled"}>Download fleet file</button>
         <label class="btn sec sm" style="cursor:pointer">Import a fleet file<input type="file" id="flIn" accept=".json,application/json" hidden></label></div></section>
       <p class="d">Use each airplane's own POH and current weight and balance record. AeroSignal checks only the numbers you enter, and the pilot in command is responsible for every flight.</p></div>`;

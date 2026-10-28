@@ -16,6 +16,7 @@
     { s: "Sam (sample student)", route: "KPNS KBFM", dep: day(2, 8), v: "NO GO", why: ["Marginal VFR forecast at arrival, below your personal minimums"], deb: null, at: day(-1, 19) },
     { s: "Taylor (sample student)", route: "KPNS KPNS", dep: day(-1, 10), v: "GO", why: ["Pattern work, local area"], deb: "Approach at KPNS: stable by 500 ft, 120 ft high at 1,000 ft", at: day(-1, 13) },
   ];
+  const LAB = [["Alex (sample student)", [3, 3, 2, 3, null, null]], ["Jordan (sample student)", [2, 3, null, null, null, null]], ["Taylor (sample student)", [3, 3, 3, 3, 3, 2]]];
   const FLEET = { DEMO1: "Cessna 172 (sample)", DEMO2: "Cessna 172 (sample)", DEMO3: "Cessna 172 (sample)" };
   const vcls = (v) => (v === "GO" ? "go" : v === "CAUTION" ? "caution" : "nogo");
   function sampleFleet() {
@@ -32,6 +33,9 @@
       <section class="panel"><h2>Shared briefs</h2><div class="tbl"><table><tr><th>Student</th><th>Flight</th><th>Verdict</th><th>Why</th><th>Approach debrief</th><th>Shared</th></tr>
         ${sh.map((x) => `<tr><td>${h(x.s)}</td><td>${h(x.route)}<br><span class="small muted">${h(fmt(x.dep))}</span></td><td class="v ${vcls(x.v)}">${h(x.v)}</td><td class="small">${x.why.map(h).join("<br>")}</td><td class="small">${h(x.deb || "")}</td><td class="small muted">${h(fmt(x.at))}</td></tr>`).join("")}
       </table></div></section>
+      <section class="panel"><h2>Planning lab progress</h2><div class="tbl"><table><tr><th>Student</th><th>Lessons</th><th>Scores</th></tr>
+        ${LAB.map(([s, sc]) => `<tr><td>${h(s)}</td><td>${sc.filter((x) => x != null).length} of 6</td><td class="small">${sc.map((x, i) => `${["Weather", "Perf", "W&B", "Fuel", "Airspace", "Risk"][i]} ${x == null ? "not yet" : x + "/3"}`).join(" · ")}</td></tr>`).join("")}
+      </table></div><p class="small muted" style="margin:6px 0 0">Students choose whether to share their lesson progress.</p></section>
       <section class="panel"><h2>Roster</h2><div class="tbl"><table><tr><th>Name</th><th>Role</th><th>Last shared</th></tr>
         <tr><td>Chief instructor (sample)</td><td>Instructor</td><td></td></tr>
         ${sh.map((x) => `<tr><td>${h(x.s)}</td><td>Student</td><td class="small">${h(x.route)} <span class="v ${vcls(x.v)}">${h(x.v)}</span></td></tr>`).join("")}

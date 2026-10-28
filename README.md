@@ -99,6 +99,7 @@ Edge functions deploy to Supabase project `jcvrcckeprmpcruhxafm`.
 - p159 printable instructor sheets for each planning lab lesson (answer key, notes box), print all six from the lesson list
 - p160 (loaded right after p1, before p16) faster first load: the military symbol library waits until a mission page or Military Planning mode needs it; index.html has a loading placeholder in #view and a preconnect to the data server
 - p161 Gold display theme (light gray, white and gold with serif headings), built on Day mode; saved under as_theme_x
+- p162 printing fixes: p118's hide everything print rule applies only with the civil card on the page (brief, mission and kneeboard prints were blank), light themes print uninverted, floating buttons stay off the paper
 - p129 ADS-B In groundwork: GDL 90 decoder and encoder, traffic layer, Traffic simulator in the map Tools menu (AeroMapTools hook in p123); live feed only in the native app (`native/`, plugin `aero-gdl90`)
 - p139 pilot feedback Oct 28: plate viewer keeps the mouse wheel off the map (full screen map), On map from the full size viewer, georeference note and Hide route corridors (Tools menu and Plates panel, S.corrHide), airport page charts, NOTAMs, frequencies and FAA publication links, logo goes home to the Start here card, device voices say FAA as F A A
 

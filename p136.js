@@ -32,6 +32,9 @@
     ]],
     ["Flight schools", [
       ["How does a flight school use AeroSignal?", `An instructor signs in and sets up a school on the <a href="#/account">Account page</a>, then gives students the join code. Students share a brief and approach debrief with one tap, and instructors see their students' recent verdicts and debriefs on one dashboard.`],
+      ["What are Flight School mode and Military Planning mode?", `Flight School mode is for student pilots and instructors in training aircraft, and hides military tools. Military Planning mode adds missions, training routes, load computation and military mishap lessons. Switch any time at the top of the <a href="#/plan">Plan page</a> or in More.`],
+      ["What is the planning lab?", `Six short lessons on preflight planning, tied to the Private Pilot ACS preflight preparation tasks: weather, performance, weight and balance, fuel, airspace and risk. Each has key points, a practice flight that opens the right part of the brief, and three check questions. <a href="#/lab">Open the planning lab</a>`],
+      ["How does a school share its airplanes with students?", `On the <a href="#/fleet">Fleet page</a>, an instructor enters each airplane's weight and balance numbers and picks its checklists once, then sends students the share link or fleet file. Opening it adds those airplanes on the student's device, so every brief uses the real numbers for the tail they fly. Nothing is stored on a server.`],
       ["What does a student share?", `Only what the student chooses, flight by flight: the route, departure time, verdict and its reasons, and the approach debrief result. Nothing else from the logbook or brief. Leaving the school removes everything shared with it.`],
     ]],
     ["Your data and account", [

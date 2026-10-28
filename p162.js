@@ -5,13 +5,14 @@
       page came out blank. It now applies only when the card is on the page.
    2. The light themes (Day, Sunlight, Sectional, Gold) work by inverting the whole page on screen.
       Printing inverted the paper too; prints now always use the print styles, black on white.
-   3. Floating buttons (Ask, Feedback) and the tour bars stay off the paper. */
+   3. Floating buttons (Ask, Feedback), the tour bars, the Start here card and the mode tiles stay off
+      the paper. */
 (function () {
   const css = document.createElement("style");
   css.textContent = `@media print{
     body:not(:has(.kc)) *{visibility:visible!important}
     html.day{filter:none!important}
-    #askFab,#askPanel,#fbFab,#tourBar,#tutBar,#tutRing,#toast{display:none!important}
+    #askFab,#askPanel,#fbFab,#tourBar,#tutBar,#tutRing,#toast,#asWelcome,#modeHub,#lpFull{display:none!important}
   }`;
   document.head.appendChild(css);
 })();

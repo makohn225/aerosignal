@@ -89,6 +89,7 @@ Edge functions deploy to Supabase project `jcvrcckeprmpcruhxafm`.
 - p136 Questions and answers page at #/faq with search; linked from More, the Plan welcome card and the public welcome page
 - p137 launch polish round 2: empty flights removed when leaving Flights, aircraft list starts on Choose an aircraft so Add aircraft works for new pilots, currency reads Not current in this logbook, civil pilots skip Missions on the welcome card and Service and Callsign on sign up
 - p138 (loaded before p54) launch polish round 3: narration audio waits until played (saves about 1.6 MB on every first visit), larger touch targets, Feedback button name, a persistent banner when browser storage is full, friendly date on the risk assessment
+- p139 from pilot feedback: Airports page Charts and NOTAMs section (every FAA chart as a PDF link, Chart Supplement link for the current cycle, current NOTAMs), plate viewer stops scroll reaching the map and gains On map, show or hide the safe altitude corridor (Altitudes switch and Tools item, S.corrHide), logo always returns to the start of Plan
 - p129 ADS-B In groundwork: GDL 90 decoder and encoder, traffic layer, Traffic simulator in the map Tools menu (AeroMapTools hook in p123); live feed only in the native app (`native/`, plugin `aero-gdl90`)
 
 Brief panel order (each module places itself next to one neighbor; never position against a

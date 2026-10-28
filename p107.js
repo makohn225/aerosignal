@@ -21,7 +21,7 @@
   document.head.appendChild(css);
   const txt = (el) => (el ? el.textContent.replace(/\s+/g, " ").trim() : "");
   const h = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-  const LABEL = { "bf-wbf": "Weight and fuel", "bf-lc": "Load", "bf-rw": "Runway winds", "bf-pf": "Takeoff and landing distance", "bf-mx": "Aircraft inspections", "bf-adv": "Hazards", "bf-as": "Airspace", "bf-nt": "NOTAMs", "bf-dv": "Diversions", "bf-ll": "Low level", "bf-vn": "Descent", "bf-wa": "Altitude" };
+  const LABEL = { "bf-wbf": "Weight and fuel", "bf-lc": "Load", "bf-rw": "Runway winds", "bf-pf": "Takeoff and landing distance", "bf-mx": "Aircraft inspections", "bf-adv": "Hazards", "bf-as": "Airspace", "bf-nt": "NOTAMs", "bf-dv": "Diversions", "bf-ll": "Low level", "bf-vn": "Descent", "bf-wa": "Altitude", "bf-cl": "Runway closures" };
   const short = (s) => { s = s.replace(/\s*Details\s*$/i, "").replace(/\.\s*$/, ""); return s.length > 90 ? s.slice(0, 88).replace(/\s+\S*$/, "") + "…" : s; };
 
   function verdict(page, card, f) {

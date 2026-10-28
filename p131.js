@@ -195,7 +195,10 @@
       const sig = `${f.id}|${f.track ? f.track.at + ":" + f.track.pts.length : 0}`;
       if (!sec) { sec = document.createElement("section"); sec.className = "panel"; sec.id = "apdPanel"; }
       if (sec.dataset.sig !== sig) { sec.dataset.sig = sig; draw(sec, f); }
-      if (trk.nextElementSibling !== sec) trk.after(sec);
+      // After the runway sections (p138 closures, p86, p84, p83 all chain off the flight track), else
+      // just after the flight track. Sitting directly after #trkPanel fought Runway winds (p83) for that spot.
+      const anchor = page.querySelector(":scope > #clPanel") || page.querySelector(":scope > #pfPanel") || page.querySelector(":scope > #dvPanel") || page.querySelector(":scope > #rwPanel") || trk;
+      if (anchor.nextElementSibling !== sec) anchor.after(sec);
     } catch (e) { console.error(e); }
     finally { setTimeout(() => (busy = false), 0); }
   }

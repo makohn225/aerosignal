@@ -106,3 +106,5 @@ Edge functions deploy to Supabase project `jcvrcckeprmpcruhxafm`.
 Brief panel order (each module places itself next to one neighbor; never position against a
 neighbor another module already uses): bbody, dbPanel, wtgPanel, trkPanel, rwPanel, dvPanel, pfPanel,
 llPanel, lcPanel, wbPanel, goPanel, pkPanel, tfrPanel, ntPanel, advPanel, asPanel, pmPanel, waPanel, mnPanel.
+
+- p350 Daylight and night panel on the brief (sunrise, sunset, civil twilight, time after dark; `AeroDaylight`)

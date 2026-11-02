@@ -25,7 +25,7 @@
       { hash: "#/brief", sel: "#wbPanel, @h:Weight and balance", wait: "#wbPanel", text: "Weight and balance uses the numbers for the exact airplane on the schedule, straight from the school fleet." },
       { hash: "#/fleet", sel: ".fl-ac, @h:Airplanes", wait: ".fl-page", text: "Instructors set up each airplane once on the Fleet page: its weight and balance numbers and its checklists." },
       { hash: "#/fleet", sel: ".fl-page .share, @h:Share with students", wait: ".fl-page", text: "Then one invite link or QR code brings each student into the school with the whole fleet loaded." },
-      { hash: "#/school/demo", sel: "@h:Shared briefs", wait: ".sc-dash table", text: "Students share their brief with the school. Instructors see every verdict and its reasons on one dashboard, before the student shows up for the lesson." },
+      { hash: "#/school/demo", sel: "@h:Shared briefs", wait: ".sc-dash table", text: "Students share their brief with the school. Instructors see every verdict and its reasons on one dashboard, then approve the plan or send it back with a comment before the student shows up." },
       { hash: "#/school/demo", sel: "@h:Planning lab progress, @h:Roster", wait: ".sc-dash table", text: "When a student turns it on, their planning lab progress shows up here too, so ground work and flight work stay in one place." },
       { hash: "#/feedback", sel: "#fbf, .page", text: "That's the tour. AeroSignal is a training aid, so your instructor, your syllabus and the POH always come first. Send feedback from any page. Every note gets read." },
     ],

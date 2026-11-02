@@ -19,7 +19,7 @@ the repository.
 
 If a range runs out, take the next free block of 50 above p400 and add it to this table.
 
-The task chat used p157 to p162 on October 28, 2026; p160 loads early, right after p1.
+The task chat used p157 to p162 on October 28, 2026 and p163 to p166 on November 2, 2026; p160 loads early, right after p1.
 
 p138 (runway closures) and p139 (October 28 pilot feedback) came from the regular chat. Its p140
 (Go to an airport) was never uploaded; the feature was rebuilt as p152, and p140 is unused. The task
@@ -47,3 +47,8 @@ push would replace it and the change would be lost.
 
 Before every push, pull (or fetch and rebase on) the latest main and build on it, so a push never
 replaces anyone else's work.
+
+## Tests
+
+Before publishing a change to a calculation (distance, course, wind, variation, weight and balance, fuel,
+nav log), run node tests/calc.test.cjs from the repository root. Every case must pass.

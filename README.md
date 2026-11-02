@@ -100,6 +100,11 @@ Edge functions deploy to Supabase project `jcvrcckeprmpcruhxafm`.
 - p160 (loaded right after p1, before p16) faster first load: the military symbol library waits until a mission page or Military Planning mode needs it; index.html has a loading placeholder in #view and a preconnect to the data server
 - p161 Gold display theme (light gray, white and gold with serif headings), built on Day mode; saved under as_theme_x
 - p162 printing fixes: p118's hide everything print rule applies only with the civil card on the page (brief, mission and kneeboard prints were blank), light themes print uninverted, floating buttons stay off the paper
+- p163 VFR nav log on the brief (TC, wind, WCA, TH, variation, MH, distance, GS, ETE, fuel per leg; times and fuel rounded up; printable paper form with ATE, ETA, ATA and deviation columns), window.AeroNavLog
+- p164 larger weight and balance envelope chart with grid, axis titles, max weights and labeled takeoff and landing points
+- p165 instructor review of shared briefs: Plans to review on the school dashboard (approve, return with comment; rpc review_share), status on the student's brief and Account page, history in school_reviews; migration 20261102_school_share_reviews.sql and privacy sentence approved November 2, 2026
+- p166 tablet touch targets: brief view switches, section chips and Plan examples at least 40 px on touch screens
+- tests/calc.test.cjs: calculation tests (distance and course, wind triangle, magnetic variation, weight and balance, fuel, nav log) against independently worked answers; run with node tests/calc.test.cjs (not deployed)
 - p129 ADS-B In groundwork: GDL 90 decoder and encoder, traffic layer, Traffic simulator in the map Tools menu (AeroMapTools hook in p123); live feed only in the native app (`native/`, plugin `aero-gdl90`)
 - p139 pilot feedback Oct 28: plate viewer keeps the mouse wheel off the map (full screen map), On map from the full size viewer, georeference note and Hide route corridors (Tools menu and Plates panel, S.corrHide), airport page charts, NOTAMs, frequencies and FAA publication links, logo goes home to the Start here card, device voices say FAA as F A A
 

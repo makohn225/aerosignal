@@ -11,10 +11,10 @@
   const day = (n, hh) => { const d = new Date(Date.now() + n * 864e5); d.setHours(hh, 0, 0, 0); return d; };
   const fmt = (d) => d.toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
   const SHARES = () => [
-    { s: "Alex (sample student)", route: "KPNS KJKA", dep: day(1, 9), v: "GO", why: ["Nothing in this brief exceeds a limit or your minimums"], deb: null, at: day(0, 8) },
-    { s: "Jordan (sample student)", route: "KJKA KCEW KJKA", dep: day(1, 14), v: "CAUTION", why: ["Gusts forecast at KCEW near your crosswind limit", "Weight and fuel: rear seat and full fuel leave 12 lb under max"], deb: null, at: day(0, 7) },
-    { s: "Sam (sample student)", route: "KPNS KBFM", dep: day(2, 8), v: "NO GO", why: ["Marginal VFR forecast at arrival, below your personal minimums"], deb: null, at: day(-1, 19) },
-    { s: "Taylor (sample student)", route: "KPNS KPNS", dep: day(-1, 10), v: "GO", why: ["Pattern work, local area"], deb: "Approach at KPNS: stable by 500 ft, 120 ft high at 1,000 ft", at: day(-1, 13) },
+    { s: "Alex (sample student)", route: "KPNS KJKA", dep: day(1, 9), v: "GO", why: ["Nothing in this brief exceeds a limit or your minimums"], deb: null, at: day(0, 8), rv: "Waiting for review" },
+    { s: "Jordan (sample student)", route: "KJKA KCEW KJKA", dep: day(1, 14), v: "CAUTION", why: ["Gusts forecast at KCEW near your crosswind limit", "Weight and fuel: rear seat and full fuel leave 12 lb under max"], deb: null, at: day(0, 7), rv: "Returned: plan the gusts at KCEW and pick an alternate" },
+    { s: "Sam (sample student)", route: "KPNS KBFM", dep: day(2, 8), v: "NO GO", why: ["Marginal VFR forecast at arrival, below your personal minimums"], deb: null, at: day(-1, 19), rv: "Approved: good call, reschedule" },
+    { s: "Taylor (sample student)", route: "KPNS KPNS", dep: day(-1, 10), v: "GO", why: ["Pattern work, local area"], deb: "Approach at KPNS: stable by 500 ft, 120 ft high at 1,000 ft", at: day(-1, 13), rv: "Approved" },
   ];
   const LAB = [["Alex (sample student)", [3, 3, 2, 3, null, null]], ["Jordan (sample student)", [2, 3, null, null, null, null]], ["Taylor (sample student)", [3, 3, 3, 3, 3, 2]]];
   const FLEET = { DEMO1: "Cessna 172 (sample)", DEMO2: "Cessna 172 (sample)", DEMO3: "Cessna 172 (sample)" };
@@ -30,8 +30,8 @@
     el.innerHTML = `<div class="page sc-dash"><p class="small"><b style="color:#ffb648">SAMPLE.</b> A made up school so you can see what instructors and students get. No account needed.</p>
       <h1>${h(SCHOOL)}</h1>
       <p class="lede">Students plan each lesson in AeroSignal and share the brief with the school. Instructors see every verdict and its reasons before the student arrives, so the preflight review starts from what matters.</p>
-      <section class="panel"><h2>Shared briefs</h2><div class="tbl"><table><tr><th>Student</th><th>Flight</th><th>Verdict</th><th>Why</th><th>Approach debrief</th><th>Shared</th></tr>
-        ${sh.map((x) => `<tr><td>${h(x.s)}</td><td>${h(x.route)}<br><span class="small muted">${h(fmt(x.dep))}</span></td><td class="v ${vcls(x.v)}">${h(x.v)}</td><td class="small">${x.why.map(h).join("<br>")}</td><td class="small">${h(x.deb || "")}</td><td class="small muted">${h(fmt(x.at))}</td></tr>`).join("")}
+      <section class="panel"><h2>Shared briefs</h2><div class="tbl"><table><tr><th>Student</th><th>Flight</th><th>Verdict</th><th>Why</th><th>Approach debrief</th><th>Review</th><th>Shared</th></tr>
+        ${sh.map((x) => `<tr><td>${h(x.s)}</td><td>${h(x.route)}<br><span class="small muted">${h(fmt(x.dep))}</span></td><td class="v ${vcls(x.v)}">${h(x.v)}</td><td class="small">${x.why.map(h).join("<br>")}</td><td class="small">${h(x.deb || "")}</td><td class="small">${h(x.rv || "")}</td><td class="small muted">${h(fmt(x.at))}</td></tr>`).join("")}
       </table></div></section>
       <section class="panel"><h2>Planning lab progress</h2><div class="tbl"><table><tr><th>Student</th><th>Lessons</th><th>Scores</th></tr>
         ${LAB.map(([s, sc]) => `<tr><td>${h(s)}</td><td>${sc.filter((x) => x != null).length} of 6</td><td class="small">${sc.map((x, i) => `${["Weather", "Perf", "W&B", "Fuel", "Airspace", "Risk"][i]} ${x == null ? "not yet" : x + "/3"}`).join(" · ")}</td></tr>`).join("")}

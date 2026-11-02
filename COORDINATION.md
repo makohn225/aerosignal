@@ -52,3 +52,10 @@ replaces anyone else's work.
 
 Before publishing a change to a calculation (distance, course, wind, variation, weight and balance, fuel,
 nav log), run node tests/calc.test.cjs from the repository root. Every case must pass.
+
+## Brief panel positions
+
+Never anchor a new brief panel right after a panel another module already anchors to; two modules
+that both insist on "right after #advPanel" swap places forever and the page jumps (p92 and p350,
+fixed November 2, 2026). Anchor to the last panel in that chain instead, currently
+#advPanel > #asPanel > #dayPanel, so a new panel goes after #dayPanel.

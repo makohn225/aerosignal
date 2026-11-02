@@ -178,8 +178,10 @@
         sec._r = r; paint(sec, r);
       }
       bluf(page, sec._r || null);
-      // After Turbulence and icing, else after the checklist, else at the end of the page
-      const anchor = page.querySelector(":scope > #advPanel") || page.querySelector(":scope > #ntPanel") || page.querySelector(":scope > #goPanel");
+      // After Airspace along the route (p92), which itself sits right after Turbulence and icing; else
+      // after Turbulence and icing, the checklist, or at the end of the page. Anchoring to #advPanel as
+      // well made p92 and this module swap places endlessly (fixed November 2, 2026 by the task chat).
+      const anchor = page.querySelector(":scope > #asPanel") || page.querySelector(":scope > #advPanel") || page.querySelector(":scope > #ntPanel") || page.querySelector(":scope > #goPanel");
       if (anchor) { if (anchor.nextElementSibling !== sec) anchor.after(sec); }
       else if (!sec.isConnected) page.appendChild(sec);
       const j = page.querySelector("#bfJump");

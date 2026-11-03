@@ -96,7 +96,7 @@
   }
   function more(page) {
     const s = page.querySelector("#roleMore");
-    if (!s || s.dataset.lp === get()) return;
+    if (!s || s.dataset.lp === (get() || "")) return;
     s.dataset.lp = get() || "";
     s.innerHTML = `<h2>Your flying</h2><p class="small" style="margin:0 0 8px">Flight School mode is for student pilots and instructors and hides military tools. Military Planning mode shows everything, including missions, training routes and load computation.</p>${seg()}`;
     wire(s);

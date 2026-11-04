@@ -59,5 +59,5 @@
     const base = ROUTES.school;
     ROUTES.school = function (el, arg) { if (String(arg || "").split("?")[0] === "demo") return render(el); return base.apply(this, arguments); };
   }
-  window.AeroSampleSchool = { sampleFleet, SCHOOL };
+  window.AeroSampleSchool = { sampleFleet, SCHOOL, SHARES, LAB };
 })();

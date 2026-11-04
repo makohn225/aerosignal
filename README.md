@@ -106,6 +106,12 @@ Edge functions deploy to Supabase project `jcvrcckeprmpcruhxafm`.
 - p166 tablet touch targets: brief view switches, section chips and Plan examples at least 40 px on touch screens
 - p167 schools edit the planning lab: instructors change a lesson's check questions (1 to 10) and add a school note; saved with the school (schools.lab, rpc set_school_lab), shown only to its members, Restore the standard version; migration 20261103_school_lab_edits.sql and privacy sentence approved November 3, 2026. p155 and p158 score against each lesson's question count
 - p168 for instructors: Instructor tutorial track on the Tutorial page (sample school and fleet; lesson editing scene only while p167 is on) and a Getting started checklist on a school's dashboard (S.gsHide)
+- p169 Vigilyn name on screen, in speech, shares and text downloads (runtime rename; internal names unchanged)
+- p170 Move my data from the old aerosignal-app link to flyvigilyn (window to window, confirmed on the new link)
+- p171 Pilot mode home: #/minimums (personal minimums and currency); Flight School tutorials switch mode while they play
+- p172 #/scenarios: scenario practice from NTSB accidents near the route, tagged by Private Pilot ACS area
+- p174 Safety summary on the instructor dashboard and the sample school (print or save as PDF)
+- p153 edit: third mode, Pilot (S.modeKind = pilot, same civil role as Flight School)
 - tests/calc.test.cjs: calculation tests (distance and course, wind triangle, magnetic variation, weight and balance, fuel, nav log) against independently worked answers; run with node tests/calc.test.cjs (not deployed)
 - p129 ADS-B In groundwork: GDL 90 decoder and encoder, traffic layer, Traffic simulator in the map Tools menu (AeroMapTools hook in p123); live feed only in the native app (`native/`, plugin `aero-gdl90`)
 - p139 pilot feedback Oct 28: plate viewer keeps the mouse wheel off the map (full screen map), On map from the full size viewer, georeference note and Hide route corridors (Tools menu and Plates panel, S.corrHide), airport page charts, NOTAMs, frequencies and FAA publication links, logo goes home to the Start here card, device voices say FAA as F A A

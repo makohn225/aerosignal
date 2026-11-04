@@ -71,7 +71,7 @@
   };
   function pageTutorial(el) {
     const m = window.AeroMode ? AeroMode.get() : null;
-    const order = (m === "mil" ? ["military", "school", "instructor", "civil"] : ["school", "instructor", "military", "civil"]).filter((k) => T.scripts[k]);
+    const order = (m === "mil" ? ["military", "school", "instructor", "civil"] : m === "pilot" ? ["civil", "school", "instructor", "military"] : ["school", "instructor", "military", "civil"]).filter((k) => T.scripts[k]);
     el.innerHTML = `<div class="page welcome">
       <p class="wk">AEROSIGNAL TUTORIAL</p>
       <h1>Pick a guided tutorial.</h1>

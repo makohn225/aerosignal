@@ -9,18 +9,22 @@
       the school fleet, your flight school and the sample school; Military Planning shows missions, a
       training route flight, military mishap lessons, the kneeboard and the risk assessment.
    3. A switch in the top bar on wide screens, in the hub on every screen, and in More (Your flying).
-   4. body.mode-school or body.mode-mil for modules that style by mode. window.AeroMode. */
+   4. body.mode-school or body.mode-mil for modules that style by mode. window.AeroMode.
+   November 3, 2026: a third mode, Pilot, for certificated pilots flying on their own. It uses the same
+   "civil" role as Flight School (no military tools); S.modeKind = "pilot" tells the two apart. */
 (function () {
   const MODES = {
+    pilot: { label: "Pilot", role: "civil", sub: "Certificated pilots planning their own flights" },
     school: { label: "Flight School", role: "civil", sub: "Student pilots and instructors in training aircraft" },
     mil: { label: "Military Planning", role: "military", sub: "Missions, training routes, load computation and military mishap lessons" },
   };
-  const get = () => (S.role === "civil" ? "school" : S.role ? "mil" : null);
+  const get = () => (S.role === "civil" ? (S.modeKind === "pilot" ? "pilot" : "school") : S.role ? "mil" : null);
   function set(m) {
     const r = MODES[m] ? MODES[m].role : null;
     if (!r) return;
+    if (m === "pilot" || m === "school") S.modeKind = m;
     try { if (window.AeroRole) AeroRole.set(r); else { S.role = r; save(); } } catch { S.role = r; try { save(); } catch {} }
-    try { toast(m === "school" ? "Flight School mode. Military tools are hidden; switch any time from the top of Plan or More." : "Military Planning mode. Every tool is shown, including missions and training routes."); } catch {}
+    try { toast(m === "pilot" ? "Pilot mode. Your flights, brief, logbook and minimums; switch any time from the top of Plan or More." : m === "school" ? "Flight School mode. Military tools are hidden; switch any time from the top of Plan or More." : "Military Planning mode. Every tool is shown, including missions and training routes."); } catch {}
     body(); paint();
   }
   const h = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -47,16 +51,24 @@
     #roleAsk .mode-q button span{font-size:13px;color:var(--ink2,#9db2ce)}
   `;
   document.head.appendChild(css);
-  const seg = (id) => `<span class="mode-seg" ${id ? `id="${id}"` : ""} role="group" aria-label="Mode"><button type="button" data-mode="school" aria-pressed="${get() === "school"}">Flight School</button><button type="button" data-mode="mil" aria-pressed="${get() === "mil"}">Military</button></span>`;
+  const seg = (id) => `<span class="mode-seg" ${id ? `id="${id}"` : ""} role="group" aria-label="Mode"><button type="button" data-mode="pilot" aria-pressed="${get() === "pilot"}">Pilot</button><button type="button" data-mode="school" aria-pressed="${get() === "school"}">Flight School</button><button type="button" data-mode="mil" aria-pressed="${get() === "mil"}">Military</button></span>`;
   const wire = (root) => root.querySelectorAll("[data-mode]").forEach((b) => (b.onclick = () => set(b.dataset.mode)));
 
   const TILES = {
+    pilot: [
+      ["#plan-box", "Plan a flight", "Describe your flight in plain words and get the brief with its GO, CAUTION or NO GO verdict"],
+      ["#/minimums", "Personal minimums", "Set the ceilings, visibility and winds you fly to; every brief checks against them"],
+      ["#/logbook", "Logbook and currency", "Your flights, with day, night and instrument currency worked out from them"],
+      ["#/scenarios", "Scenario practice", "Real accidents on your route as what would you do questions, for flight reviews and checkrides"],
+      ["#/frat", "Risk assessment", "Score and sign the flight risk assessment"],
+    ],
     school: [
       ["#/lab", "Planning lab", "Short lessons on weather, performance, weight and balance, fuel, airspace and risk, each with a practice flight"],
       ["#plan-box", "Plan a training flight", "Describe tomorrow's flight in plain words and get the brief"],
       ["#/fleet", "School fleet", "Each airplane's weight and balance and checklists, set up once and shared with students"],
       ["#/account/school", "My flight school", "Join with a code, share briefs with your instructor, or open the instructor dashboard"],
       ["#/school/demo", "Sample school", "See a Gulf Coast training school with students, fleet and shared briefs"],
+      ["#/scenarios", "Checkride scenarios", "Real accidents near your route as oral exam style questions, tied to the ACS"],
     ],
     mil: [
       ["#/missions", "Missions", "Plan a mission with the objective area, kneeboard cards and the mission brief"],
@@ -89,6 +101,7 @@
     if (!q || q.dataset.lp) return;
     q.dataset.lp = "1";
     q.innerHTML = `<b>How will you use AeroSignal?</b><div class="mode-q">
+      <button type="button" data-mode="pilot"><b>Pilot</b><span>${h(MODES.pilot.sub)}</span></button>
       <button type="button" data-mode="school"><b>Flight School</b><span>${h(MODES.school.sub)}</span></button>
       <button type="button" data-mode="mil"><b>Military Planning</b><span>${h(MODES.mil.sub)}</span></button></div>
       <span class="small muted">You can switch any time from the top of this page or in More.</span>`;
@@ -98,7 +111,7 @@
     const s = page.querySelector("#roleMore");
     if (!s || s.dataset.lp === (get() || "")) return;
     s.dataset.lp = get() || "";
-    s.innerHTML = `<h2>Your flying</h2><p class="small" style="margin:0 0 8px">Flight School mode is for student pilots and instructors and hides military tools. Military Planning mode shows everything, including missions, training routes and load computation.</p>${seg()}`;
+    s.innerHTML = `<h2>Your flying</h2><p class="small" style="margin:0 0 8px">Pilot mode is for certificated pilots flying on their own. Flight School mode is for student pilots and instructors. Both hide military tools. Military Planning mode shows everything, including missions, training routes and load computation.</p>${seg()}`;
     wire(s);
   }
   function top() {
@@ -110,12 +123,13 @@
   }
   function body() {
     document.body.classList.toggle("mode-school", get() === "school");
+    document.body.classList.toggle("mode-pilot", get() === "pilot");
     document.body.classList.toggle("mode-mil", get() === "mil");
   }
   function paint() {
     body(); top();
     // Lesson, fleet and school pages are focused work; the welcome card stays on Plan
-    document.body.classList.toggle("mode-focus", /^#\/(lab|fleet|school)/.test(location.hash || ""));
+    document.body.classList.toggle("mode-focus", /^#\/(lab|fleet|school|minimums|scenarios)/.test(location.hash || ""));
     const page = document.querySelector("#view .page");
     if (!page) return;
     const hash = location.hash || "#/plan";

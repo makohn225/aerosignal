@@ -5,10 +5,9 @@
    rpc set_school_lab) and shown only to that school's members, labeled "From <school>"; everyone else
    keeps the standard lessons, and "Restore the standard version" removes a school's edit.
    If a lesson's questions change, the student's saved answers to the old ones are cleared.
-   Needs migration 20261103_school_lab_edits.sql and its privacy sentence: LIVE stays false until the
-   owner approves both (window.AERO_LABEDIT_PREVIEW = true shows it for testing). */
+   Migration 20261103_school_lab_edits.sql (applied) and its privacy sentence approved November 3, 2026. */
 (function () {
-  const LIVE = false;
+  const LIVE = true; // migration and privacy sentence approved by the owner on November 3, 2026
   const on = () => LIVE || window.AERO_LABEDIT_PREVIEW === true;
   const PRIV = "A school's instructors can edit the planning lab check questions and add school notes to the lessons. Those edits are stored with the school and shown only to its members.";
   const h = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));

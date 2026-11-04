@@ -1,5 +1,5 @@
--- School edits of the planning lab check questions and school notes (p167). Proposed November 3, 2026;
--- apply only after the owner approves it and its privacy sentence. Adds only; nothing existing changes.
+-- School edits of the planning lab check questions and school notes (p167). Approved by the owner and
+-- applied November 3, 2026, with its privacy sentence. Adds only; nothing existing changes.
 -- Members already read the school row (schools_member_read); only instructors write, through the function.
 
 alter table public.schools add column if not exists lab jsonb;

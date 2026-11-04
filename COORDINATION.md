@@ -19,7 +19,7 @@ the repository.
 
 If a range runs out, take the next free block of 50 above p400 and add it to this table.
 
-The task chat used p157 to p162 on October 28, 2026 and p163 to p166 on November 2, 2026, p167 to p174 on November 3, 2026 (p171 Pilot mode minimums page and tutorial mode swap, p172 scenario practice from accidents, p173 unused, p174 school safety summary; p170 moves device data from the old link to the new one; p169 is the Vigilyn name: it renames AeroSignal on screen at runtime, so new text can still say AeroSignal or Vigilyn); p160 loads early, right after p1.
+The task chat used p157 to p162 on October 28, 2026 and p163 to p166 on November 2, 2026, p167 to p174 on November 3, 2026 (p171 Pilot mode minimums page and tutorial mode swap, p172 scenario practice from accidents, p173 unused, p174 school safety summary, p175 FAA airport status and pilot reports on the brief; p170 moves device data from the old link to the new one; p169 is the Vigilyn name: it renames AeroSignal on screen at runtime, so new text can still say AeroSignal or Vigilyn); p160 loads early, right after p1.
 
 p138 (runway closures) and p139 (October 28 pilot feedback) came from the regular chat. Its p140
 (Go to an airport) was never uploaded; the feature was rebuilt as p152, and p140 is unused. The task
@@ -58,4 +58,4 @@ nav log), run node tests/calc.test.cjs from the repository root. Every case must
 Never anchor a new brief panel right after a panel another module already anchors to; two modules
 that both insist on "right after #advPanel" swap places forever and the page jumps (p92 and p350,
 fixed November 2, 2026). Anchor to the last panel in that chain instead, currently
-#advPanel > #asPanel > #dayPanel, so a new panel goes after #dayPanel.
+#advPanel > #asPanel > #dayPanel > #nsPanel (p175, November 3), so a new panel goes after #nsPanel.

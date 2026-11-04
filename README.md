@@ -111,6 +111,7 @@ Edge functions deploy to Supabase project `jcvrcckeprmpcruhxafm`.
 - p171 Pilot mode home: #/minimums (personal minimums and currency); Flight School tutorials switch mode while they play
 - p172 #/scenarios: scenario practice from NTSB accidents near the route, tagged by Private Pilot ACS area
 - p174 Safety summary on the instructor dashboard and the sample school (print or save as PDF)
+- p175 Airport traffic and delays panel on the brief: FAA NAS status (nasstatus function) and pilot reports (REPORTS_LIVE false until the airport_reports migration and privacy sentence are approved; demo flight shows samples). p107 edit: verdict reads the bf-ns line
 - p153 edit: third mode, Pilot (S.modeKind = pilot, same civil role as Flight School)
 - tests/calc.test.cjs: calculation tests (distance and course, wind triangle, magnetic variation, weight and balance, fuel, nav log) against independently worked answers; run with node tests/calc.test.cjs (not deployed)
 - p129 ADS-B In groundwork: GDL 90 decoder and encoder, traffic layer, Traffic simulator in the map Tools menu (AeroMapTools hook in p123); live feed only in the native app (`native/`, plugin `aero-gdl90`)

@@ -1,6 +1,6 @@
 {
-  "name": "AeroSignal",
-  "short_name": "AeroSignal",
+  "name": "Vigilyn",
+  "short_name": "Vigilyn",
   "description": "Preflight mishap intelligence for civilian and military pilots.",
   "start_url": "/#/flights",
   "scope": "/",

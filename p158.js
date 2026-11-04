@@ -168,7 +168,7 @@
   const LESSONS = () => (window.AeroLab ? AeroLab.LESSONS : []);
   function summary() {
     const L = (window.AeroLab && AeroLab.progress()) || {}, out = {};
-    for (const l of LESSONS()) { const r = L[l.id]; if (r && r.done) out[l.id] = { score: r.score, at: r.at || null }; }
+    for (const l of LESSONS()) { const r = L[l.id]; if (r && r.done) out[l.id] = { score: r.score, of: r.of || 3, at: r.at || null }; }
     return { v: 1, n: LESSONS().length, lessons: out };
   }
   let studentSchools = null;
@@ -217,7 +217,7 @@
   function labCells(lab) {
     const L = LESSONS(), got = (lab && lab.lessons) || {};
     const n = L.filter((l) => got[l.id]).length;
-    return { n, chips: L.map((l, i) => { const r = got[l.id]; return `<span class="${r ? (r.score === 3 ? "ok" : "mid") : ""}" title="${h(l.title)}">${i + 1}. ${h(l.id === "wb" ? "W&B" : l.id === "perf" ? "Perf" : l.id === "air" ? "Airspace" : l.id === "wx" ? "Weather" : l.id === "fuel" ? "Fuel" : "Risk")} ${r ? `${r.score}/3` : "not yet"}</span>`; }).join("") };
+    return { n, chips: L.map((l, i) => { const r = got[l.id]; return `<span class="${r ? (r.score >= (r.of || 3) ? "ok" : "mid") : ""}" title="${h(l.title)}">${i + 1}. ${h(l.id === "wb" ? "W&B" : l.id === "perf" ? "Perf" : l.id === "air" ? "Airspace" : l.id === "wx" ? "Weather" : l.id === "fuel" ? "Fuel" : "Risk")} ${r ? `${r.score}/${r.of || 3}` : "not yet"}</span>`; }).join("") };
   }
   async function dashboard() {
     const m = /^#\/school\/([0-9a-f-]{36})/.exec(location.hash || "");

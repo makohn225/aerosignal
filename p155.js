@@ -151,7 +151,7 @@
     el.innerHTML = `<div class="page lab-page"><h1>Planning lab</h1>
       <p class="lede">Six short lessons on preflight planning, each tied to the Private Pilot ACS, Area I Preflight Preparation. Read the key points, plan a practice flight in the app, then check yourself.</p>
       <div class="small muted">${done} of ${LESSONS.length} complete</div><div class="bar"><i style="width:${Math.round((done / LESSONS.length) * 100)}%"></i></div>
-      <div class="lab-list">${LESSONS.map((l, i) => { const r = L[l.id]; return `<a href="#/lab/${l.id}"><span><b>${i + 1}. ${h(l.title)}</b><small>${h(l.acs)} · about ${l.min} minutes</small></span>${r && r.done ? `<span class="done">DONE ${r.score}/3</span>` : `<span class="todo">START</span>`}</a>`; }).join("")}</div>
+      <div class="lab-list">${LESSONS.map((l, i) => { const r = L[l.id]; return `<a href="#/lab/${l.id}"><span><b>${i + 1}. ${h(l.title)}</b><small>${h(l.acs)} · about ${l.min} minutes</small></span>${r && r.done ? `<span class="done">DONE ${r.score}/${r.of || 3}</span>` : `<span class="todo">START</span>`}</a>`; }).join("")}</div>
       ${DISC}</div>`;
   }
   function tails() { let all = {}; try { all = allAircraft(); } catch {} return Object.keys(all); }
@@ -200,9 +200,9 @@
       const a = (lab()[l.id] || {}).ans || [];
       if (a.filter((x) => x != null).length < l.quiz.length) { el.querySelector("#lbScore").textContent = ""; return; }
       const s = a.reduce((n, x, qi) => n + (x === l.quiz[qi][2] ? 1 : 0), 0);
-      lab()[l.id] = { ...lab()[l.id], done: true, score: s, at: Date.now() };
+      lab()[l.id] = { ...lab()[l.id], done: true, score: s, of: l.quiz.length, at: Date.now() };
       save();
-      el.querySelector("#lbScore").innerHTML = `<b>${s} of 3.</b> ${s === 3 ? "Lesson complete." : "Lesson complete. Review the explanations, and talk through the ones you missed with your instructor."}`;
+      el.querySelector("#lbScore").innerHTML = `<b>${s} of ${l.quiz.length}.</b> ${s === l.quiz.length ? "Lesson complete." : "Lesson complete. Review the explanations, and talk through the ones you missed with your instructor."}`;
     };
     ans.forEach((oi, qi) => { if (oi != null) mark(qi, oi); });
     score();

@@ -1,8 +1,8 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { db } from "./db.ts";
 
-// AeroSignal AI connector: a read only Model Context Protocol server (Streamable HTTP, JSON responses)
-// so Claude, ChatGPT and other AI assistants can use AeroSignal's public safety data while a pilot
+// Vigilyn AI connector: a read only Model Context Protocol server (Streamable HTTP, JSON responses)
+// so Claude, ChatGPT and other AI assistants can use Vigilyn's public safety data while a pilot
 // plans. Public data only: NTSB accident records and narratives, public military mishap reporting,
 // FAA airport data and aviationweather.gov advisories. No user data, no accounts, nothing is written.
 //   POST /functions/v1/mcp   JSON-RPC 2.0 (initialize, tools/list, tools/call, ping)
@@ -13,8 +13,8 @@ const CORS = {
   "Access-Control-Allow-Methods": "POST, GET, DELETE, OPTIONS",
   "Access-Control-Expose-Headers": "mcp-session-id",
 };
-const APP = "https://aerosignal-app.vercel.app";
-const DISC = "AeroSignal is advisory only. It is not an official weather briefing, NOTAM source or flight plan. The pilot in command is responsible for the decision to fly. Military narratives come from public reporting, not official mishap reports. Never enter CUI or classified information.";
+const APP = "https://flyvigilyn.vercel.app";
+const DISC = "Vigilyn is advisory only. It is not an official weather briefing, NOTAM source or flight plan. The pilot in command is responsible for the decision to fly. Military narratives come from public reporting, not official mishap reports. Never enter CUI or classified information.";
 const PROTOCOLS = ["2025-06-18", "2025-03-26", "2024-11-05"];
 
 // Simple per address limit so one client cannot hammer the database
@@ -181,7 +181,7 @@ async function milNear(a: any) {
 // aviationweather.gov advisories
 const AWC = "https://aviationweather.gov/api/data";
 async function awc(path: string) {
-  const r = await fetch(`${AWC}/${path}`, { headers: { "User-Agent": "AeroSignal/0.1 (MCP connector)" } });
+  const r = await fetch(`${AWC}/${path}`, { headers: { "User-Agent": "Vigilyn/0.1 (MCP connector)" } });
   if (r.status === 204) return [];
   if (!r.ok) throw new Error(`${path.split("?")[0]} ${r.status}`);
   const j = await r.json();
@@ -251,8 +251,8 @@ async function handle(msg: any): Promise<any | null> {
       return ok({
         protocolVersion: PROTOCOLS.includes(want) ? want : PROTOCOLS[0],
         capabilities: { tools: { listChanged: false } },
-        serverInfo: { name: "aerosignal", title: "AeroSignal", version: "1.0.0" },
-        instructions: `AeroSignal preflight mishap intelligence. Use these tools to look up past accidents and public military mishaps along a route, current turbulence and icing advisories, and airport data, then explain the lessons that apply to the pilot's flight. ${DISC}`,
+        serverInfo: { name: "vigilyn", title: "Vigilyn", version: "1.0.0" },
+        instructions: `Vigilyn preflight mishap intelligence. Use these tools to look up past accidents and public military mishaps along a route, current turbulence and icing advisories, and airport data, then explain the lessons that apply to the pilot's flight. ${DISC}`,
       });
     }
     case "ping": return ok({});
@@ -278,7 +278,7 @@ Deno.serve(async (req) => {
   if (req.method === "GET") {
     const accept = req.headers.get("accept") || "";
     if (accept.includes("text/event-stream")) return new Response(null, { status: 405, headers: { ...CORS, Allow: "POST" } });
-    return Response.json({ name: "AeroSignal AI connector", transport: "streamable-http", endpoint: new URL(req.url).pathname, tools: TOOLS.map((t) => t.name), about: `${APP}/#/more`, disclaimer: DISC }, { headers: CORS });
+    return Response.json({ name: "Vigilyn AI connector", transport: "streamable-http", endpoint: new URL(req.url).pathname, tools: TOOLS.map((t) => t.name), about: `${APP}/#/more`, disclaimer: DISC }, { headers: CORS });
   }
   if (req.method === "DELETE") return new Response(null, { status: 204, headers: CORS });
   if (req.method !== "POST") return new Response(null, { status: 405, headers: CORS });

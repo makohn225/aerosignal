@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>AeroSignal listens for traffic and GPS from your ADS-B receiver on the same Wi-Fi network.</string>
+	<string>Vigilyn listens for traffic and GPS from your ADS-B receiver on the same Wi-Fi network.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>AeroSignal uses your location to show your aircraft on the map and approach profile.</string>
+	<string>Vigilyn uses your location to show your aircraft on the map and approach profile.</string>
 	<key>UIRequiresFullScreen</key>
 	<false/>
     <key>CAPACITOR_DEBUG</key>
@@ -13,7 +13,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-        <string>AeroSignal</string>
+        <string>Vigilyn</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

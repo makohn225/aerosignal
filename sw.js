@@ -133,7 +133,8 @@ self.addEventListener("message", (e) => { if (e.data === "as-version") e.source 
 self.addEventListener("push", (e) => {
   let d = {};
   try { d = e.data ? e.data.json() : {}; } catch (_) { d = { body: e.data ? e.data.text() : "" }; }
-  e.waitUntil(self.registration.showNotification(d.title || "AeroSignal", { body: d.body || "", tag: d.tag || "aerosignal", renotify: true, icon: "/icons/icon-192.png", badge: "/icons/icon-192.png", data: { url: d.url || "/" } }));
+  const vg = (x) => String(x || "").replace(/AeroSignal/g, "Vigilyn"); /* p169: new product name */
+  e.waitUntil(self.registration.showNotification(vg(d.title) || "Vigilyn", { body: vg(d.body), tag: d.tag || "aerosignal", renotify: true, icon: "/icons/icon-192.png", badge: "/icons/icon-192.png", data: { url: d.url || "/" } }));
 });
 self.addEventListener("notificationclick", (e) => {
   e.notification.close();

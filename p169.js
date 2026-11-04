@@ -6,6 +6,7 @@
 (function () {
   const OLD = /AeroSignal/g, NEW = "Vigilyn", HAS = (s) => typeof s === "string" && s.indexOf("AeroSignal") !== -1;
   const ATTRS = ["title", "aria-label", "placeholder", "alt", "content"];
+  const VOICE = {"e94828c4":["e94828c4v",10.1],"f5693bd0":["f5693bd0v",11.2],"365d1677":["365d1677v",8.7],"0c3faecb":["0c3faecbv",6.0],"b8d39b86":["b8d39b86v",7.3],"a019505e":["a019505ev",11.7],"9c0d8afa":["9c0d8afav",6.3],"d827aeac":["d827aeacv",6.5],"46b39487":["46b39487v",6.4],"1e71b21e":["1e71b21ev",11.4],"958cb98a":["958cb98av",7.7],"89f8c40d":["89f8c40dv",11.6],"2e80eead":["2e80eeadv",9.9],"9aee28b6":["9aee28b6v",9.2],"ddf25ca1":["ddf25ca1v",7.9],"bc4c7e54":["bc4c7e54v",10.7],"a1e179d4":["a1e179d4v",9.7],"7234af3a":["7234af3av",8.4],"e3a38e03":["e3a38e03v",9.0],"dde3ded3":["dde3ded3v",7.3],"9ab8d97e":["9ab8d97ev",10.8],"2f2bf074":["2f2bf074v",11.8],"100efd5a":["100efd5av",12.5],"01cb5053":["01cb5053v",7.8],"de6ca3e1":["de6ca3e1v",9.8],"aa67a255":["aa67a255v",10.5]};
   const view = () => document.getElementById("view");
 
   // Text people type stays as typed.
@@ -56,6 +57,41 @@
     if (queued.size && !timer) timer = setTimeout(flush, 0);
   });
   mo.observe(document.documentElement, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ATTRS });
+
+  // Spoken and copied text: the tutorial and intro scripts, the voice, shares, the clipboard and text downloads.
+  const SITE = /aerosignal-app\.vercel\.app/g, swap = (s) => s.replace(OLD, NEW).replace(SITE, "flyvigilyn.vercel.app");
+  try {
+    (window.AeroPromo && AeroPromo.scenes || []).forEach((s) => { if (HAS(s.t)) s.t = swap(s.t); });
+    const T = window.AeroTutorial && AeroTutorial.scripts;
+    if (T) for (const k in T) (T[k] && T[k].scenes || []).forEach((s) => { if (HAS(s.text)) s.text = swap(s.text); });
+  } catch (e) { console.error(e); }
+  // Recorded natural voice for the renamed lines and the school and instructor tours (same voice as the other tutorials).
+  try { if (window.AeroNarration && AeroNarration.manifest) Object.assign(AeroNarration.manifest, VOICE); } catch (e) { console.error(e); }
+  const ss = window.speechSynthesis;
+  if (ss && typeof ss.speak === "function") {
+    const speak = ss.speak.bind(ss);
+    ss.speak = function (u) { try { if (u && HAS(u.text)) u.text = swap(u.text); } catch (e) {} return speak(u); };
+  }
+  if (navigator.share) {
+    const share = navigator.share.bind(navigator);
+    navigator.share = (d) => share(d && typeof d === "object" ? Object.fromEntries(Object.entries(d).map(([k, v]) => [k, typeof v === "string" ? swap(v) : v])) : d);
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    const wt = navigator.clipboard.writeText.bind(navigator.clipboard);
+    navigator.clipboard.writeText = (t) => wt(typeof t === "string" ? swap(t) : t);
+  }
+  // Text downloads (calendar, KML, CSV, printouts). JSON backups keep their exact content so they import anywhere.
+  if (typeof Blob === "function") {
+    const B = Blob;
+    const VB = function (parts, opts) {
+      const ty = (opts && opts.type) || "";
+      if (Array.isArray(parts) && !/json/i.test(ty)) parts = parts.map((p) => typeof p === "string" && (HAS(p) || SITE.test(p)) ? (SITE.lastIndex = 0, swap(p)) : p);
+      SITE.lastIndex = 0;
+      return new B(parts, opts);
+    };
+    VB.prototype = B.prototype;
+    try { window.Blob = VB; } catch (e) {}
+  }
 
   window.addEventListener("hashchange", () => setTimeout(() => { sweep(view()); brand(); }, 0));
   brand(); sweep(document.documentElement);

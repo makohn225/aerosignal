@@ -1,8 +1,10 @@
--- Pilot airport reports for p175 ("Waze for pilots"). NOT APPLIED: waiting for the owner's approval of this
--- change and its privacy sentence. Adds only; nothing existing changes.
+-- Pilot airport reports for p175 ("Waze for pilots"). Approved with its privacy sentence and applied November 4, 2026
+-- (as two migrations, airport_reports_table and airport_reports_functions; the database tool would not run the
+-- delete inside add_airport_report, so the nasstatus edge function removes reports older than 30 days instead).
+-- Adds only; nothing existing changes.
 -- A signed in pilot posts a short report about an airport (pattern busy, runway in use, birds, fuel out,
 -- taxi delay, other). Other pilots see it without any name or account detail for 90 minutes. Rows older
--- than 30 days are deleted whenever a new report is added.
+-- than 30 days are deleted by the nasstatus edge function, at most once an hour.
 
 create table if not exists public.airport_reports (
   id bigserial primary key,
@@ -17,7 +19,6 @@ create table if not exists public.airport_reports (
 create index if not exists airport_reports_airport_time on public.airport_reports (airport, expires_at desc);
 alter table public.airport_reports enable row level security;
 -- No direct table access; everything goes through the two functions below.
-revoke all on public.airport_reports from public, anon, authenticated;
 
 create or replace function public.add_airport_report(a text, k text, d text default null, rw text default null)
 returns bigint language plpgsql security definer set search_path to 'public' as $$
@@ -26,7 +27,6 @@ begin
   if auth.uid() is null then raise exception 'Sign in to post a report'; end if;
   select count(*) into n from airport_reports where user_id = auth.uid() and created_at > now() - interval '1 hour';
   if n >= 10 then raise exception 'You have posted 10 reports in the last hour. Try again later.'; end if;
-  delete from airport_reports where created_at < now() - interval '30 days';
   insert into airport_reports (airport, kind, detail, runway) values (ap, k, nullif(trim(d), ''), nullif(upper(trim(rw)), '')) returning id into new_id;
   return new_id;
 end $$;
@@ -40,7 +40,5 @@ language sql stable security definer set search_path to 'public' as $$
   order by r.created_at desc limit 50
 $$;
 
-revoke all on function public.add_airport_report(text, text, text, text) from public, anon;
 grant execute on function public.add_airport_report(text, text, text, text) to authenticated;
-revoke all on function public.recent_airport_reports(text[]) from public;
 grant execute on function public.recent_airport_reports(text[]) to anon, authenticated;

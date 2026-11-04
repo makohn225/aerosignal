@@ -111,8 +111,8 @@ Edge functions deploy to Supabase project `jcvrcckeprmpcruhxafm`.
 - p171 Pilot mode home: #/minimums (personal minimums and currency); Flight School tutorials switch mode while they play
 - p172 #/scenarios: scenario practice from NTSB accidents near the route, tagged by Private Pilot ACS area
 - p174 Safety summary on the instructor dashboard and the sample school (print or save as PDF)
-- p175 Airport traffic and delays panel on the brief: FAA NAS status (nasstatus function) and pilot reports (REPORTS_LIVE false until the airport_reports migration and privacy sentence are approved; demo flight shows samples). p107 edit: verdict reads the bf-ns line
-- p176 School traffic picture on the instructor dashboard and sample school (shared flights by airport and hour, next 48 hours); student side needs migration 20261104_school_traffic.sql (not applied)
+- p175 Airport traffic and delays panel on the brief: FAA NAS status (nasstatus function) and pilot reports (live November 4: post from the brief when signed in, shown without names for 90 minutes; nasstatus deletes reports older than 30 days; demo flight shows samples and cannot post). p107 edit: verdict reads the bf-ns line
+- p176 School traffic picture on the instructor dashboard and sample school (shared flights by airport and hour, next 48 hours); students and instructors see counts without names on the brief (school_traffic function, applied November 4)
 - p177 GPS and approaches panel on the brief: GPS, WAAS and LPV NOTAMs at route airports (bf-gps card line, read by p107) and, on IFR flights, which destination and alternate approaches need GPS
 - p153 edit: third mode, Pilot (S.modeKind = pilot, same civil role as Flight School)
 - tests/calc.test.cjs: calculation tests (distance and course, wind triangle, magnetic variation, weight and balance, fuel, nav log) against independently worked answers; run with node tests/calc.test.cjs (not deployed)

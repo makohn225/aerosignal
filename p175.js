@@ -5,11 +5,13 @@
       configuration and arrival rate in use. Anything listed adds an "FAA airport status" line to the bottom
       line card, which the verdict (p107) counts as CAUTION. The FAA lists mostly large airports.
    2. Pilot reports (busy pattern, runway in use, birds, fuel out, and so on) that expire after 90 minutes.
-      REPORTS_LIVE stays false until the owner approves the airport_reports table and its privacy sentence
-      (migration 20261104_airport_reports.sql, not applied). Until then the demo flight shows sample reports.
+      Approved with the airport_reports table and its privacy sentence on November 4, 2026 (migration
+      20261104_airport_reports.sql). Signed in pilots post from the brief; anyone sees reports without names.
+      The demo flight shows labeled sample reports and cannot post.
    Panel position: after #dayPanel, the last panel in the brief chain (see COORDINATION.md). */
 (function () {
-  const REPORTS_LIVE = false;
+  const REPORTS_LIVE = true;
+  const PRIV = "If you post an airport report, such as a busy pattern or the runway in use, we store the airport, your report and the time, linked to your account. Other pilots see the report without your name for 90 minutes, and we delete it after 30 days.";
   const h = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const KINDS = [["busy", "Pattern busy"], ["runway", "Runway in use"], ["birds", "Birds"], ["fuel", "Fuel unavailable"], ["taxi", "Taxi delay"], ["other", "Other"]];
   const KL = Object.fromEntries(KINDS);
@@ -28,7 +30,10 @@
     #nsPanel .ns-rp span{font-size:12.5px;padding:4px 9px;border-radius:999px;border:1px solid rgba(61,224,255,.4)}
     #nsPanel .ns-add{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
     #nsPanel .ns-add button{min-height:40px}
-    #nsPanel .ns-sample{font:700 11px var(--mono,monospace);color:#ffb648;letter-spacing:.5px}`;
+    #nsPanel .ns-sample{font:700 11px var(--mono,monospace);color:#ffb648;letter-spacing:.5px}
+    #nsPanel .ns-form{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}
+    #nsPanel .ns-form input{flex:1 1 180px;min-height:40px}
+    #nsPanel .ns-msg{font-size:13px;margin:6px 0 0}`;
   document.head.appendChild(css);
 
   let cache = { key: "", at: 0, data: null, busy: false };
@@ -37,6 +42,18 @@
     if (cache.key === key && cache.data && Date.now() - cache.at < 120000) return cache.data;
     const j = await fnGet(`nasstatus?ids=${encodeURIComponent(key)}`);
     cache = { key, at: Date.now(), data: j, busy: false };
+    return j;
+  }
+  async function loadReports(ids) {
+    const all = [...new Set(ids.flatMap((a) => [String(a).toUpperCase(), id3(a)]))];
+    try { return (await rpc("recent_airport_reports", { ids: all })) || []; } catch (e) { return []; }
+  }
+  async function post(a, k, d, rw) {
+    const tok = await validToken();
+    if (!tok) throw new Error("Sign in to post a report.");
+    const r = await fetch(`${SUPA.url}/rest/v1/rpc/add_airport_report`, { method: "POST", headers: { ...authHdr(tok), "Content-Type": "application/json" }, body: JSON.stringify({ a, k, d: d || null, rw: rw || null }) });
+    let j = null; try { j = await r.json(); } catch (e) {}
+    if (!r.ok) throw new Error((j && (j.message || j.hint)) || "The report could not be posted.");
     return j;
   }
   function sampleReports(ids) {
@@ -69,10 +86,44 @@
         return `<div class="ns-apt"><h3>${h(a)}${x && x.name ? ` <span class="small muted">${h(x.name)}</span>` : ""}</h3>
           ${L.length ? L.map((l) => `<p class="ns-l">${l}</p>`).join("") : `<p class="ns-l"><b class="ok">No FAA delays or programs</b> reported right now</p>`}
           ${R.length ? `<div class="ns-rp">${sample ? `<span class="ns-sample">SAMPLE</span>` : ""}${R.map((r) => `<span>${h(KL[r.kind] || r.kind)}${r.runway ? ` ${h(r.runway)}` : ""}${r.detail ? `: ${h(r.detail)}` : ""} · ${h(ago(r.created_at))}</span>`).join("")}</div>` : ""}
-          ${REPORTS_LIVE ? `<div class="ns-add" data-a="${h(a)}">${KINDS.map(([k, t]) => `<button type="button" class="btn sec sm" data-k="${k}">${h(t)}</button>`).join("")}</div>` : ""}
+          ${REPORTS_LIVE && !sample ? `<div class="ns-add" data-a="${h(a)}">${KINDS.map(([k, t]) => `<button type="button" class="btn sec sm" data-k="${k}">${h(t)}</button>`).join("")}</div>` : ""}
         </div>`;
       }).join("")}
-      <p class="small muted" style="margin:10px 0 0">FAA status from the FAA's NAS Status page${data && data.fetched ? `, checked ${h(tm(data.fetched))}` : ""}. The FAA lists mostly larger airports. ${sample ? "Pilot reports shown are samples of a feature coming soon. " : REPORTS_LIVE ? "Pilot reports are from other Vigilyn pilots, expire after 90 minutes and are not verified. " : ""}Advisory only, never for traffic separation.</p>`;
+      <p class="small muted" style="margin:10px 0 0">FAA status from the FAA's NAS Status page${data && data.fetched ? `, checked ${h(tm(data.fetched))}` : ""}. The FAA lists mostly larger airports. ${sample ? "Pilot reports shown on this sample flight are examples. " : REPORTS_LIVE ? "Pilot reports come from other Vigilyn pilots, show without names for 90 minutes and are not verified. Post them on the ground, not while flying. " : ""}Advisory only, never for traffic separation.</p>`;
+  }
+  function wire(sec) {
+    sec.querySelectorAll(".ns-add").forEach((box) => box.querySelectorAll("[data-k]").forEach((b) => (b.onclick = () => {
+      const a = box.dataset.a, k = b.dataset.k;
+      box.parentNode.querySelectorAll(".ns-form, .ns-msg").forEach((x) => x.remove());
+      const f = document.createElement("div"); f.className = "ns-form";
+      f.innerHTML = `<input maxlength="${k === "runway" ? 3 : 140}" placeholder="${k === "runway" ? "Runway, like 17 or 26L" : `${h(KL[k])}: add a short note (optional)`}" aria-label="Report details"><button type="button" class="btn sm">Post</button><button type="button" class="btn sec sm">Cancel</button>`;
+      box.after(f);
+      const inp = f.querySelector("input"), [go, no] = f.querySelectorAll("button");
+      inp.focus();
+      no.onclick = () => f.remove();
+      go.onclick = async () => {
+        const v = inp.value.trim();
+        if (k === "runway" && !/^[0-9]{1,2}[LCRlcr]?$/.test(v)) { inp.focus(); inp.placeholder = "Enter the runway number, like 17"; return; }
+        go.disabled = true;
+        const msg = document.createElement("p"); msg.className = "ns-msg";
+        try {
+          await post(a, k, k === "runway" ? null : v, k === "runway" ? v : null);
+          f.remove(); msg.textContent = "Posted. Other pilots see it without your name for 90 minutes."; try { toast("Report posted. Other pilots see it for 90 minutes."); } catch (e2) {}
+          box.after(msg);
+          sec.dataset.k = ""; kick();
+        } catch (e) {
+          go.disabled = false;
+          msg.innerHTML = /sign in/i.test(e.message) ? `Sign in to post a report. <a href="#/account">Sign in</a>` : h(e.message);
+          f.after(msg);
+        }
+      };
+    })));
+  }
+  function privacy() {
+    if (!/^#\/privacy(\/|$|\?)/.test(location.hash || "")) return;
+    const v = document.getElementById("view"), a = v && (v.querySelector("#pvTraffic") || v.querySelector("#pvLabEdit") || v.querySelector("#pvReview") || v.querySelector("#pvSchool2") || v.querySelector("#pvSchool"));
+    if (!a || v.querySelector("#pvReports")) return;
+    const p = document.createElement("p"); p.id = "pvReports"; p.textContent = PRIV; a.after(p);
   }
   function cardLine(page, ids, data) {
     const card = page.querySelector("#bfBluf"); if (!card) return;
@@ -88,6 +139,7 @@
 
   let busy = false, t = 0;
   async function apply() {
+    try { privacy(); } catch (e) {}
     if (busy || !/^#\/brief(\/|$|\?)/.test(location.hash || "")) return;
     const page = document.querySelector("#view .page");
     let f = null; try { f = currentFlight(); } catch (e) {}
@@ -105,10 +157,11 @@
         sec.dataset.k = key; sec.dataset.at = String(Date.now());
         let data = null;
         try { data = await load(ids); } catch (e) { data = null; }
-        const sample = !!f.demo && !REPORTS_LIVE;
-        const reports = sample ? sampleReports(ids) : [];
+        const sample = !!f.demo;
+        const reports = sample ? sampleReports(ids) : REPORTS_LIVE ? await loadReports(ids) : [];
         if (sec.isConnected) {
           paint(sec, f, ids, data, reports, sample);
+          wire(sec);
           if (!data) sec.querySelector("h2").insertAdjacentHTML("afterend", `<p class="small muted">FAA status could not load right now.</p>`);
           sec._data = data;
         }

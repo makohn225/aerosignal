@@ -1,5 +1,4 @@
--- Student side of the school traffic picture (p176). NOT APPLIED: waiting for the owner's approval of this
--- change and its privacy sentence. Adds one read only function; nothing existing changes.
+-- Student side of the school traffic picture (p176). Approved with its privacy sentence and applied November 4, 2026. Adds one read only function; nothing existing changes.
 -- Any member of a school (student or instructor) can see how many shared school flights depart in each hour of
 -- the next two days and their routes' airports, as counts only: no names, no user ids, no flight details.
 

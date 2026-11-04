@@ -19,7 +19,7 @@ the repository.
 
 If a range runs out, take the next free block of 50 above p400 and add it to this table.
 
-The task chat used p157 to p162 on October 28, 2026 and p163 to p166 on November 2, 2026, p167 on November 3, 2026; p160 loads early, right after p1.
+The task chat used p157 to p162 on October 28, 2026 and p163 to p166 on November 2, 2026, p167 and p168 on November 3, 2026; p160 loads early, right after p1.
 
 p138 (runway closures) and p139 (October 28 pilot feedback) came from the regular chat. Its p140
 (Go to an airport) was never uploaded; the feature was rebuilt as p152, and p140 is unused. The task

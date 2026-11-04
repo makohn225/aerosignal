@@ -66,11 +66,12 @@
   const CARDS = {
     school: ["✈", "Flight School", "The planning lab, a practice flight in a sample 172, the brief and its verdict, the school fleet and the instructor dashboard.", "Play the Flight School tutorial"],
     military: ["★", "Military Planning", "Mission plan, objective area diagram, the brief, the RAT debrief, kneeboard cards, mishaps and training routes, and the logbook.", "Play the military tutorial"],
+    instructor: ["✓", "Flight School instructor", "Set up your school: the fleet, inviting students, reviewing and approving their plans, lesson progress and printed lesson sheets.", "Play the instructor tutorial"],
     civil: ["◆", "Instrument pilot", "An IFR flight in Virginia: route entry, the risk brief, accidents on the map, safe altitudes, plates and the logbook.", "Play the instrument pilot tutorial"],
   };
   function pageTutorial(el) {
     const m = window.AeroMode ? AeroMode.get() : null;
-    const order = m === "mil" ? ["military", "school", "civil"] : ["school", "military", "civil"];
+    const order = (m === "mil" ? ["military", "school", "instructor", "civil"] : ["school", "instructor", "military", "civil"]).filter((k) => T.scripts[k]);
     el.innerHTML = `<div class="page welcome">
       <p class="wk">AEROSIGNAL TUTORIAL</p>
       <h1>Pick a guided tutorial.</h1>

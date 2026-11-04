@@ -4,7 +4,8 @@
    The owner approved on November 3, 2026 swapping only the name (no other wording) in the privacy policy, the terms of use
    and the agreement dialog, so those are renamed too. Internal names (storage keys, AeroXxx script APIs, file names) do not change. */
 (function () {
-  const OLD = /AeroSignal/g, NEW = "Vigilyn", HAS = (s) => typeof s === "string" && s.indexOf("AeroSignal") !== -1;
+  const OLD = /AeroSignal|AEROSIGNAL/g, NEW = "Vigilyn", REP = (m) => (m === "AEROSIGNAL" ? "VIGILYN" : NEW);
+  const HAS = (s) => typeof s === "string" && (s.indexOf("AeroSignal") !== -1 || s.indexOf("AEROSIGNAL") !== -1);
   const ATTRS = ["title", "aria-label", "placeholder", "alt", "content"];
   const VOICE = {"e44f4e50":["e44f4e50v",12.8],"e475d54e":["e475d54ev",18.5],"b763a188":["b763a188v",11.7],"e94828c4":["e94828c4v",10.1],"f5693bd0":["f5693bd0v",11.2],"365d1677":["365d1677v",8.7],"0c3faecb":["0c3faecbv",6.0],"b8d39b86":["b8d39b86v",7.3],"a019505e":["a019505ev",11.7],"9c0d8afa":["9c0d8afav",6.3],"d827aeac":["d827aeacv",6.5],"46b39487":["46b39487v",6.4],"1e71b21e":["1e71b21ev",11.4],"958cb98a":["958cb98av",7.7],"89f8c40d":["89f8c40dv",11.6],"2e80eead":["2e80eeadv",9.9],"9aee28b6":["9aee28b6v",9.2],"ddf25ca1":["ddf25ca1v",7.9],"bc4c7e54":["bc4c7e54v",10.7],"a1e179d4":["a1e179d4v",9.7],"7234af3a":["7234af3av",8.4],"e3a38e03":["e3a38e03v",9.0],"dde3ded3":["dde3ded3v",7.3],"9ab8d97e":["9ab8d97ev",10.8],"2f2bf074":["2f2bf074v",11.8],"100efd5a":["100efd5av",12.5],"01cb5053":["01cb5053v",7.8],"de6ca3e1":["de6ca3e1v",9.8],"aa67a255":["aa67a255v",10.5]};
   const view = () => document.getElementById("view");
@@ -17,11 +18,11 @@
     return false;
   }
 
-  function fixText(t) { if (HAS(t.nodeValue) && !kept(t)) t.nodeValue = t.nodeValue.replace(OLD, NEW); }
+  function fixText(t) { if (HAS(t.nodeValue) && !kept(t)) t.nodeValue = t.nodeValue.replace(OLD, REP); }
   function fixAttrs(el) {
     if (el.nodeType !== 1 || el.tagName === "SCRIPT") return;
-    for (const a of ATTRS) { const v = el.getAttribute(a); if (HAS(v) && !kept(el)) el.setAttribute(a, v.replace(OLD, NEW)); }
-    if ((el.tagName === "INPUT") && HAS(el.value) && el.type === "button") el.value = el.value.replace(OLD, NEW);
+    for (const a of ATTRS) { const v = el.getAttribute(a); if (HAS(v) && !kept(el)) el.setAttribute(a, v.replace(OLD, REP)); }
+    if ((el.tagName === "INPUT") && HAS(el.value) && el.type === "button") el.value = el.value.replace(OLD, REP);
   }
   function sweep(root) {
     if (!root) return;
@@ -32,18 +33,23 @@
     const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
     for (let t = w.nextNode(); t; t = w.nextNode()) fixText(t);
     if (root.querySelectorAll) root.querySelectorAll(ATTRS.map((a) => `[${a}*="AeroSignal"]`).join(",")).forEach(fixAttrs);
+    // Two tone wordmarks written as Aero<span>Signal</span> (intro video, tutorial artwork).
+    if (root.querySelectorAll) root.querySelectorAll("span, tspan").forEach((sp) => {
+      const pv = sp.previousSibling;
+      if (sp.textContent === "Signal" && pv && pv.nodeType === 3 && /Aero$/.test(pv.nodeValue)) { pv.nodeValue = pv.nodeValue.replace(/Aero$/, "Vigil"); sp.textContent = "yn"; }
+    });
   }
 
   function brand() {
     const b = document.querySelector(".topbar .brand");
     if (b && b.dataset.vg !== "1") { b.dataset.vg = "1"; b.innerHTML = "Vigil<span>yn</span>"; }
-    if (HAS(document.title)) document.title = document.title.replace(OLD, NEW);
+    if (HAS(document.title)) document.title = document.title.replace(OLD, REP);
   }
 
   // Native dialogs cannot be reached in the page, so their text is renamed as it is shown.
   for (const k of ["confirm", "alert", "prompt"]) {
     const f = window[k];
-    if (typeof f === "function") window[k] = function (m, ...r) { return f.call(window, HAS(m) ? m.replace(OLD, NEW) : m, ...r); };
+    if (typeof f === "function") window[k] = function (m, ...r) { return f.call(window, HAS(m) ? m.replace(OLD, REP) : m, ...r); };
   }
 
   let queued = new Set(), timer = 0;
@@ -54,12 +60,12 @@
       else if (m.type === "attributes") { if (HAS(m.target.getAttribute(m.attributeName))) queued.add(m.target); }
       else m.addedNodes.forEach((n) => queued.add(n));
     }
-    if (queued.size && !timer) timer = setTimeout(flush, 0);
+    if (queued.size) flush(); // before the next paint, so the old name never flashes
   });
   mo.observe(document.documentElement, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ATTRS });
 
   // Spoken and copied text: the tutorial and intro scripts, the voice, shares, the clipboard and text downloads.
-  const SITE = /aerosignal-app\.vercel\.app/g, swap = (s) => s.replace(OLD, NEW).replace(SITE, "flyvigilyn.vercel.app");
+  const SITE = /aerosignal-app\.vercel\.app/g, swap = (s) => s.replace(OLD, REP).replace(SITE, "flyvigilyn.vercel.app");
   try {
     (window.AeroPromo && AeroPromo.scenes || []).forEach((s) => { if (HAS(s.t)) s.t = swap(s.t); });
     const T = window.AeroTutorial && AeroTutorial.scripts;

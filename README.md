@@ -114,6 +114,8 @@ Edge functions deploy to Supabase project `jcvrcckeprmpcruhxafm`.
 - p175 Airport traffic and delays panel on the brief: FAA NAS status (nasstatus function) and pilot reports (live November 4: post from the brief when signed in, shown without names for 90 minutes; nasstatus deletes reports older than 30 days; demo flight shows samples and cannot post). p107 edit: verdict reads the bf-ns line
 - p176 School traffic picture on the instructor dashboard and sample school (shared flights by airport and hour, next 48 hours); students and instructors see counts without names on the brief (school_traffic function, applied November 4)
 - p177 GPS and approaches panel on the brief: GPS, WAAS and LPV NOTAMs at route airports (bf-gps card line, read by p107) and, on IFR flights, which destination and alternate approaches need GPS
+- p178 #/clearance: CRAFT clearance practice (preferred route, departure frequency, squawk; listen, copy blind, check, readback); tiles in Pilot and Flight School hubs (p153 edit)
+- p179 Themes: only Gold (default on first run), Dark (p87 signal) and Tactical (p87 tac) are offered; Night red and Tactical users go to Tactical
 - p153 edit: third mode, Pilot (S.modeKind = pilot, same civil role as Flight School)
 - tests/calc.test.cjs: calculation tests (distance and course, wind triangle, magnetic variation, weight and balance, fuel, nav log) against independently worked answers; run with node tests/calc.test.cjs (not deployed)
 - p129 ADS-B In groundwork: GDL 90 decoder and encoder, traffic layer, Traffic simulator in the map Tools menu (AeroMapTools hook in p123); live feed only in the native app (`native/`, plugin `aero-gdl90`)

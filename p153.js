@@ -61,6 +61,7 @@
       ["#/logbook", "Logbook and currency", "Your flights, with day, night and instrument currency worked out from them"],
       ["#/scenarios", "Scenario practice", "Real accidents on your route as what would you do questions, for flight reviews and checkrides"],
       ["#/frat", "Risk assessment", "Score and sign the flight risk assessment"],
+      ["#/clearance", "Clearance practice", "Hear and copy the IFR clearance you would likely get for your flight"],
     ],
     school: [
       ["#/lab", "Planning lab", "Short lessons on weather, performance, weight and balance, fuel, airspace and risk, each with a practice flight"],
@@ -69,6 +70,7 @@
       ["#/account/school", "My flight school", "Join with a code, share briefs with your instructor, or open the instructor dashboard"],
       ["#/school/demo", "Sample school", "See a Gulf Coast training school with students, fleet and shared briefs"],
       ["#/scenarios", "Checkride scenarios", "Real accidents near your route as oral exam style questions, tied to the ACS"],
+      ["#/clearance", "Clearance practice", "Hear and copy a clearance in CRAFT order, then check your readback"],
     ],
     mil: [
       ["#/missions", "Missions", "Plan a mission with the objective area, kneeboard cards and the mission brief"],
@@ -129,7 +131,7 @@
   function paint() {
     body(); top();
     // Lesson, fleet and school pages are focused work; the welcome card stays on Plan
-    document.body.classList.toggle("mode-focus", /^#\/(lab|fleet|school|minimums|scenarios)/.test(location.hash || ""));
+    document.body.classList.toggle("mode-focus", /^#\/(lab|fleet|school|minimums|scenarios|clearance)/.test(location.hash || ""));
     const page = document.querySelector("#view .page");
     if (!page) return;
     const hash = location.hash || "#/plan";

@@ -117,6 +117,8 @@ Edge functions deploy to Supabase project `jcvrcckeprmpcruhxafm`.
 - p178 #/clearance: CRAFT clearance practice (preferred route, departure frequency, squawk; listen, copy blind, check, readback); tiles in Pilot and Flight School hubs (p153 edit)
 - p179 Themes: only Gold (default on first run), Dark (p87 signal) and Tactical (p87 tac) are offered; Night red and Tactical users go to Tactical
 - p180 Student progress panel and printable per student report on the instructor dashboard and sample school
+- p181 Flight Service handoff on the Flight plan sheet (tap to copy each item, 1800wxbrief.com, .fpl download, Open in ForeFlight on iPhone and iPad); Gold text glow removed, compact phone top bar, Tactical keeps disclaimers red
+- Edge functions ntsbsync (NTSB weekly update files and the public GitHub mirror into ntsb_events and ntsb_narratives) and embedchain (runs the embedding backfill in steps)
 - p153 edit: third mode, Pilot (S.modeKind = pilot, same civil role as Flight School)
 - tests/calc.test.cjs: calculation tests (distance and course, wind triangle, magnetic variation, weight and balance, fuel, nav log) against independently worked answers; run with node tests/calc.test.cjs (not deployed)
 - p129 ADS-B In groundwork: GDL 90 decoder and encoder, traffic layer, Traffic simulator in the map Tools menu (AeroMapTools hook in p123); live feed only in the native app (`native/`, plugin `aero-gdl90`)

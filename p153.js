@@ -57,6 +57,7 @@
   const TILES = {
     pilot: [
       ["#plan-box", "Plan a flight", "Describe your flight in plain words and get the brief with its GO, CAUTION or NO GO verdict"],
+      ["#/fly", "Fly", "In flight: groundspeed, next waypoint, time and fuel to the destination, nearest airports"],
       ["#/minimums", "Personal minimums", "Set the ceilings, visibility and winds you fly to; every brief checks against them"],
       ["#/logbook", "Logbook and currency", "Your flights, with day, night and instrument currency worked out from them"],
       ["#/scenarios", "Scenario practice", "Real accidents on your route as what would you do questions, for flight reviews and checkrides"],
@@ -131,7 +132,7 @@
   function paint() {
     body(); top();
     // Lesson, fleet and school pages are focused work; the welcome card stays on Plan
-    document.body.classList.toggle("mode-focus", /^#\/(lab|fleet|school|minimums|scenarios|clearance)/.test(location.hash || ""));
+    document.body.classList.toggle("mode-focus", /^#\/(lab|fleet|school|minimums|scenarios|clearance|fly)/.test(location.hash || ""));
     const page = document.querySelector("#view .page");
     if (!page) return;
     const hash = location.hash || "#/plan";

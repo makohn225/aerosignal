@@ -119,6 +119,7 @@ Edge functions deploy to Supabase project `jcvrcckeprmpcruhxafm`.
 - p180 Student progress panel and printable per student report on the instructor dashboard and sample school
 - p181 Flight Service handoff on the Flight plan sheet (tap to copy each item, 1800wxbrief.com, .fpl download, Open in ForeFlight on iPhone and iPad); Gold text glow removed, compact phone top bar, Tactical keeps disclaimers red
 - p182 Fly screen (#/fly): GPS groundspeed, magnetic track, altitude, next waypoint with auto sequencing and Direct to, destination ETE and ETA, fuel estimate from the nav log numbers, flight timer, nearest airports; Fly tile in Pilot mode and a Fly this route button on the Flight plan sheet (p153 edit adds the tile)
+- p183 Known issues for this aircraft type (#kiPanel after #gpPanel): FAA Service Difficulty Reports by system and part with the latest reports, through sdr_summary; edge function sdrsync loads the yearly SDR files; weekly NTSB job private.ntsb_weekly on cron
 - Edge functions ntsbsync (NTSB weekly update files and the public GitHub mirror into ntsb_events and ntsb_narratives) and embedchain (runs the embedding backfill in steps)
 - p153 edit: third mode, Pilot (S.modeKind = pilot, same civil role as Flight School)
 - tests/calc.test.cjs: calculation tests (distance and course, wind triangle, magnetic variation, weight and balance, fuel, nav log) against independently worked answers; run with node tests/calc.test.cjs (not deployed)

@@ -125,6 +125,7 @@ Edge functions deploy to Supabase project `jcvrcckeprmpcruhxafm`.
 - p186 Maps sidebar Route tab (every point with magnetic course, leg and total distance, time at cruise speed) and Add VFR checkpoints (Maps Route tab and Flights page): about every 20 nm on long legs, public airports within 5 nm of the line first, then VORs; private strips and military fields skipped; Undo
 - p187 Ask and Feedback floating buttons are round icons that show their label on hover or focus; pages get bottom room so the last lines scroll clear
 - p188 Forgiving route entry: TO, THEN, VIA, FROM, AND and arrows between points are ignored; a middle point more than 300 nm off the route is left out with a toast (stops a typo or a word like TO resolving to a navaid on another continent)
+- p189 Preview in 3D (#/preview): flies the route over 3D terrain (AWS open elevation tiles) with satellite imagery or the FAA sectional, cockpit, chase or overhead view, fixed MSL or height above ground, speed 1x to 40x, scrub bar, HUD with next point, MSL, ground and AGL (red under 500 ft); MapLibre GL 4.7.1 from unpkg on demand; entry from the Maps Route tab, Fly screen, MTR panel and Pilot and Military hub tiles
 - p182 edit Nov 6: Fly screen only derives speed and track from precise fixes and says when the device has no GPS (laptops)
 - Monthly SDR refresh job private.sdr_monthly on cron (approved Nov 6)
 - Edge functions ntsbsync (NTSB weekly update files and the public GitHub mirror into ntsb_events and ntsb_narratives) and embedchain (runs the embedding backfill in steps)

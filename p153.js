@@ -58,6 +58,7 @@
     pilot: [
       ["#plan-box", "Plan a flight", "Describe your flight in plain words and get the brief with its GO, CAUTION or NO GO verdict"],
       ["#/fly", "Fly", "In flight: groundspeed, next waypoint, time and fuel to the destination, nearest airports"],
+      ["#/preview", "Preview in 3D", "Fly the route over 3D terrain before you go, at your altitude or a height above the ground"],
       ["#/minimums", "Personal minimums", "Set the ceilings, visibility and winds you fly to; every brief checks against them"],
       ["#/logbook", "Logbook and currency", "Your flights, with day, night and instrument currency worked out from them"],
       ["#/scenarios", "Scenario practice", "Real accidents on your route as what would you do questions, for flight reviews and checkrides"],
@@ -76,6 +77,7 @@
     mil: [
       ["#/missions", "Missions", "Plan a mission with the objective area, kneeboard cards and the mission brief"],
       ["#plan-box", "Training route flight", "A local sortie with a training route, like KNCA VR084 B-F 13NC KNCA"],
+      ["#/preview", "Preview in 3D", "Fly the route or training route over 3D terrain at a set height above the ground"],
       ["#/safety", "Military mishap lessons", "Search public military mishap narratives and NTSB records"],
       ["#/frat", "Risk assessment", "Score and sign the flight risk assessment"],
       ["#/checklists", "Checklists", "Your own approved checklists, ready to run"],
@@ -132,7 +134,7 @@
   function paint() {
     body(); top();
     // Lesson, fleet and school pages are focused work; the welcome card stays on Plan
-    document.body.classList.toggle("mode-focus", /^#\/(lab|fleet|school|minimums|scenarios|clearance|fly)/.test(location.hash || ""));
+    document.body.classList.toggle("mode-focus", /^#\/(lab|fleet|school|minimums|scenarios|clearance|fly|preview)/.test(location.hash || ""));
     const page = document.querySelector("#view .page");
     if (!page) return;
     const hash = location.hash || "#/plan";

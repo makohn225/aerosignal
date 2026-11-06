@@ -124,6 +124,9 @@ Edge functions deploy to Supabase project `jcvrcckeprmpcruhxafm`.
 - p185 Edit route on the map: the solid magenta route follows the drag instead of only the dashed line (tester feedback 17)
 - p186 Maps sidebar Route tab (every point with magnetic course, leg and total distance, time at cruise speed) and Add VFR checkpoints (Maps Route tab and Flights page): about every 20 nm on long legs, public airports within 5 nm of the line first, then VORs; private strips and military fields skipped; Undo
 - p187 Ask and Feedback floating buttons are round icons that show their label on hover or focus; pages get bottom room so the last lines scroll clear
+- p188 Forgiving route entry: TO, THEN, VIA, FROM, AND and arrows between points are ignored; a middle point more than 300 nm off the route is left out with a toast (stops a typo or a word like TO resolving to a navaid on another continent)
+- p182 edit Nov 6: Fly screen only derives speed and track from precise fixes and says when the device has no GPS (laptops)
+- Monthly SDR refresh job private.sdr_monthly on cron (approved Nov 6)
 - Edge functions ntsbsync (NTSB weekly update files and the public GitHub mirror into ntsb_events and ntsb_narratives) and embedchain (runs the embedding backfill in steps)
 - p153 edit: third mode, Pilot (S.modeKind = pilot, same civil role as Flight School)
 - tests/calc.test.cjs: calculation tests (distance and course, wind triangle, magnetic variation, weight and balance, fuel, nav log) against independently worked answers; run with node tests/calc.test.cjs (not deployed)

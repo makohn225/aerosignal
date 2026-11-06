@@ -77,8 +77,13 @@
   function feed(p) {
     // p: { lat, lon, altFt, kt, trk }
     const prev = st.pos;
-    if (p.kt == null && prev) { const dt = (Date.now() - prev.at) / 36e5; p.kt = dt > 0 ? dist(prev, p) / dt : null; }
-    if (p.trk == null && prev && dist(prev, p) > 0.02) p.trk = brg(prev, p);
+    // Work out speed and track from successive fixes only when they are precise (a real GPS); a laptop's Wi-Fi
+    // position wanders by hundreds of feet and would show a false groundspeed. (Nov 6 edit)
+    const good = p.acc == null || p.acc <= 30;
+    const dtS = prev ? (Date.now() - prev.at) / 1000 : 0;
+    if (p.kt == null && prev && good && prev.acc != null && prev.acc <= 30 && dtS >= 2) p.kt = dist(prev, p) / (dtS / 3600);
+    if (p.trk == null && prev && good && dist(prev, p) > 0.05) p.trk = brg(prev, p);
+    st.coarse = p.acc != null && p.acc > 100;
     st.pos = { ...p, at: Date.now() };
     if (!st.t0 && (p.kt || 0) > 40) st.t0 = Date.now();
     render();
@@ -88,7 +93,7 @@
     stop(); wake();
     st.watch = navigator.geolocation.watchPosition((g) => {
       const c = g.coords;
-      feed({ lat: c.latitude, lon: c.longitude, altFt: c.altitude != null ? c.altitude * 3.28084 : null, kt: c.speed != null && c.speed >= 0 ? c.speed * 1.94384 : null, trk: c.heading != null && !isNaN(c.heading) && (c.speed || 0) > 1 ? c.heading : null });
+      feed({ acc: c.accuracy, lat: c.latitude, lon: c.longitude, altFt: c.altitude != null ? c.altitude * 3.28084 : null, kt: c.speed != null && c.speed >= 0 ? c.speed * 1.94384 : null, trk: c.heading != null && !isNaN(c.heading) && (c.speed || 0) > 1 ? c.heading : null });
     }, (e) => { toast(e.code === 1 ? "Allow location for Vigilyn to use the Fly screen" : "No GPS position yet"); }, { enableHighAccuracy: true, maximumAge: 1000, timeout: 20000 });
     render();
   }
@@ -117,6 +122,7 @@
     const p = st.pos;
     const on = st.watch != null;
     el.querySelector("#flGo").textContent = on ? "Stop" : "Start flying";
+    if (p && st.coarse && !(p.kt > 0)) { out.innerHTML = `<p class="muted">This device's position is only approximate (about ${Math.round((p.acc || 0) * 3.28084).toLocaleString("en-US")} ft), so it has no GPS. The Fly screen needs a phone or tablet with GPS, or a GPS receiver connected to this device.</p>`; return; }
     if (!p) { out.innerHTML = `<p class="muted">${on ? "Waiting for a GPS position…" : "Tap Start flying. Vigilyn uses this device's GPS."}</p>`; return; }
     st.ni = Math.max(1, Math.min(pts.length - 1, nextIndex(pts, st.ni, p)));
     const nx = pts[st.ni], dest = pts[pts.length - 1];

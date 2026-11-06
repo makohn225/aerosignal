@@ -8,7 +8,7 @@
    Data: AWS open elevation tiles (Terrarium, public domain sources such as USGS 3DEP and SRTM), Esri World
    Imagery (as on the 2D map) and the FAA VFR sectional. MapLibre GL JS 4.7.1 is loaded from unpkg only when the page
    opens. Preview for situational awareness only: terrain and imagery are approximate and may be out of date,
-   and towers, wires and other obstacles are not drawn. Nothing is stored or sent. */
+   and only FAA obstacle file entries 200 ft AGL or taller are drawn (added Nov 6); wires are not. Nothing is stored or sent. */
 (function () {
   if (typeof ROUTES === "undefined") return;
   const LIB = "https://unpkg.com/maplibre-gl@4.7.1/dist/";
@@ -77,6 +77,36 @@
   function planned(f) { let a = 0; try { a = window.AeroWinds ? Number(AeroWinds.altOf(f)) || 0 : 0; } catch (e) {} return a || Number(String(f.cruiseAlt || "").replace(/\D/g, "")) || 4500; }
   function speed(f) { try { const nl = f.nl || {}; if (Number(nl.tas)) return Number(nl.tas); const a = (allAircraft() || {})[f.tail]; const v = a && (Number(a.cruiseKt) || Number(a.tas)); if (v) return v; } catch (e) {} return f.missionId ? 240 : 110; }
 
+  // FAA Digital Obstacle File along the route (200 ft AGL and taller, within 3 nm of the line), Nov 6 addition
+  function xt(a, b, q) {
+    const k = Math.cos(((a.lat + b.lat) / 2) * R) * 60, bx = (b.lon - a.lon) * k, by = (b.lat - a.lat) * 60, px = (q.lon - a.lon) * k, py = (q.lat - a.lat) * 60;
+    const L2 = bx * bx + by * by || 1, t = Math.max(0, Math.min(1, (px * bx + py * by) / L2));
+    return { d: Math.hypot(px - bx * t, py - by * t), t };
+  }
+  async function obstacles(pts) {
+    if (typeof arcQuery !== "function") return [];
+    const out = new Map();
+    for (let i = 1; i < pts.length; i++) {
+      const a = pts[i - 1], b = pts[i], pad = 0.06;
+      const env = [Math.min(a.lon, b.lon) - pad, Math.min(a.lat, b.lat) - pad, Math.max(a.lon, b.lon) + pad, Math.max(a.lat, b.lat) + pad];
+      try {
+        const j = await arcQuery("Digital_Obstacle_File", { where: "AGL>=200", geometry: env.join(","), geometryType: "esriGeometryEnvelope", inSR: "4326", spatialRel: "esriSpatialRelIntersects", outFields: "OBJECTID,AGL,AMSL,Type_Code,Lat_DD,Long_DD,Lighting", orderByFields: "AMSL DESC", resultRecordCount: "1000", returnGeometry: "false", f: "json" });
+        for (const f of j.features || []) {
+          const o = f.attributes || {}, q = { lat: +o.Lat_DD, lon: +o.Long_DD };
+          if (!isFinite(q.lat) || !isFinite(q.lon) || xt(a, b, q).d > 3) continue;
+          out.set(`${q.lat.toFixed(5)},${q.lon.toFixed(5)}`, { lat: q.lat, lon: q.lon, agl: +o.AGL || 0, amsl: +o.AMSL || 0, type: String(o.Type_Code || "obstacle").toLowerCase(), lit: o.Lighting });
+        }
+      } catch (e) { console.warn("obstacles", e); }
+    }
+    return [...out.values()];
+  }
+  function obsGeo(list) {
+    const sq = (o) => { const d = 0.00028, k = Math.cos(o.lat * R); return [[[o.lon - d / k, o.lat - d], [o.lon + d / k, o.lat - d], [o.lon + d / k, o.lat + d], [o.lon - d / k, o.lat + d], [o.lon - d / k, o.lat - d]]]; };
+    return {
+      cols: { type: "FeatureCollection", features: list.map((o) => ({ type: "Feature", geometry: { type: "Polygon", coordinates: sq(o) }, properties: { h: o.agl / FT } })) },
+      tops: { type: "FeatureCollection", features: list.map((o) => ({ type: "Feature", geometry: { type: "Point", coordinates: [o.lon, o.lat] }, properties: { t: `${Math.round(o.agl).toLocaleString("en-US")} AGL` } })) },
+    };
+  }
   const tiles = new Map();
   function elev(lat, lon) {
     const z = 12, n = 2 ** z, x = ((lon + 180) / 360) * n, sl = Math.sin(lat * R), y = (0.5 - Math.log((1 + sl) / (1 - sl)) / (4 * Math.PI)) * n;
@@ -105,7 +135,7 @@
     const T = track(pts), kt0 = speed(f), alt0 = planned(f);
     st.s = 0; st.alt = null;
     el.innerHTML = `<div class="page pv"><h1>Preview flight <span class="muted" style="font-size:.55em">${h(pts[0].ident)} to ${h(pts[pts.length - 1].ident)}, ${Math.round(T.total)} nm</span></h1>
-      <p class="pv-disc">Preview for situational awareness only. Terrain and imagery are approximate and may be out of date, and towers, wires and other obstacles are not shown. Not for navigation.</p>
+      <p class="pv-disc">Preview for situational awareness only. Terrain and imagery are approximate and may be out of date. Only obstacles 200 ft AGL or taller from the FAA obstacle file are shown; wires and newer or shorter obstacles are not. Not for navigation.</p>
       <div class="pv-ctl">
         <button type="button" class="btn" id="pvPlay">Play</button>
         <label>Altitude <select id="pvMode"><option value="msl">Fixed MSL</option><option value="agl">Above ground</option></select></label>
@@ -116,6 +146,7 @@
       </div>
       <div class="pv-wrap"><div id="pvMap"></div><div class="pv-hud" id="pvHud"></div><div class="pv-load" id="pvLoad">Loading 3D terrain…</div></div>
       <input type="range" id="pvScrub" min="0" max="1000" value="0" aria-label="Position along the route">
+      <p class="small" id="pvObsN" style="margin:6px 0 0">Loading FAA obstacles along the route…</p>
       <p class="small muted">Terrain: AWS open elevation tiles (USGS and SRTM). Imagery: Esri World Imagery. Chart: FAA VFR sectional. For a low level or MTR route, choose Above ground and set the height you plan to fly.</p></div>`;
     const $ = (s) => el.querySelector(s);
     $("#pvMode").onchange = (e) => { if (e.target.value === "agl" && +$("#pvAlt").value > 3000) $("#pvAlt").value = 500; if (e.target.value === "msl" && +$("#pvAlt").value < 1000) $("#pvAlt").value = alt0; st.alt = null; frame(0, true); };
@@ -156,9 +187,13 @@
         const src = st.map.getSource("pvAc"); if (src) src.setData({ type: "Feature", geometry: { type: "Point", coordinates: [p.lon, p.lat] }, properties: {} });
       } catch (e) {}
       const gFt = gM == null ? null : gM * FT, mslFt = altM * FT, agl = gFt == null ? null : mslFt - gFt;
+      // The tallest obstacle within 1 nm of the track in the next 5 nm
+      let ob = null;
+      for (const o of st.obs || []) { const b2 = brg(p, o), dd = dist(p, o); const off = Math.abs(Math.sin(((b2 - p.crs) * R))) * dd, fwd = Math.cos((b2 - p.crs) * R) * dd; if (fwd > 0 && fwd < 5 && off < 1 && (!ob || o.amsl > ob.amsl)) ob = { ...o, fwd }; }
+      const obHtml = ob ? `<div class="${ob.amsl > mslFt - 500 ? "low" : ""}"><small>Obstacle ahead</small>${h(ob.type)} ${Math.round(ob.amsl).toLocaleString("en-US")} MSL, ${ob.fwd.toFixed(1)} nm</div>` : "";
       $("#pvHud").innerHTML = `<div><small>Next</small>${h(p.next.ident)} ${p.toNext.toFixed(1)} nm</div><div><small>Course</small>${deg(p.crs)}T</div>
         <div><small>Altitude</small>${Math.round(mslFt / 10) * 10} ft MSL</div><div><small>Ground</small>${gFt == null ? "…" : `${Math.round(gFt / 10) * 10} ft`}</div>
-        <div class="${agl != null && agl < 500 ? "low" : ""}"><small>Above ground</small>${agl == null ? "…" : `${Math.round(agl / 10) * 10} ft`}</div><div><small>Flown</small>${Math.round(st.s)} of ${Math.round(T.total)} nm</div>`;
+        <div class="${agl != null && agl < 500 ? "low" : ""}"><small>Above ground</small>${agl == null ? "…" : `${Math.round(agl / 10) * 10} ft`}</div><div><small>Flown</small>${Math.round(st.s)} of ${Math.round(T.total)} nm</div>${obHtml}`;
       if (!force) $("#pvScrub").value = String(Math.round((st.s / T.total) * 1000));
       if (st.s >= T.total && st.run) { stop(); $("#pvPlay").textContent = "Replay"; }
     }
@@ -202,6 +237,15 @@
       const start = () => { if (started) return; started = true; frame(0, true); setTimeout(() => frame(0, true), 1500); };
       map.once("style.load", start); map.once("load", start);
       map.once("render", () => { const l = $("#pvLoad"); if (l) l.remove(); });
+      st.obs = [];
+      map.once("style.load", () => obstacles(pts).then((list) => {
+        if (st.map !== map) return;
+        st.obs = list; const g = obsGeo(list);
+        map.addSource("obsC", { type: "geojson", data: g.cols }); map.addSource("obsT", { type: "geojson", data: g.tops });
+        map.addLayer({ id: "obsC", type: "fill-extrusion", source: "obsC", paint: { "fill-extrusion-color": "#ff3b3b", "fill-extrusion-height": ["get", "h"], "fill-extrusion-base": 0, "fill-extrusion-opacity": 0.9 } });
+        map.addLayer({ id: "obsT", type: "symbol", source: "obsT", minzoom: 12, layout: { "text-field": ["get", "t"], "text-size": 11, "text-font": ["Open Sans Semibold"], "text-offset": [0, -1] }, paint: { "text-color": "#fff", "text-halo-color": "#b00020", "text-halo-width": 1.5 } });
+        const n = el.querySelector("#pvObsN"); if (n) n.textContent = list.length ? `${list.length} obstacle${list.length === 1 ? "" : "s"} 200 ft AGL or taller within 3 nm of the route ${list.length === 1 ? "is" : "are"} drawn in red (FAA Digital Obstacle File).` : "No obstacles 200 ft AGL or taller were found within 3 nm of the route.";
+      }));
     }).catch((e) => { const l = $("#pvLoad"); if (l) l.textContent = e.message || "3D preview could not load."; });
   };
   window.addEventListener("hashchange", () => { if (!/^#\/preview/.test(location.hash)) { stop(); try { st.map && st.map.remove(); } catch (e) {} st.map = null; } });

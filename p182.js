@@ -66,6 +66,38 @@
     return { fuel: num(o.fuel) ?? num((f.wb || {}).fuel), gph: num(o.gph) ?? num(wb.gph), taxi: num(o.taxi) ?? 1 };
   }
 
+  // Terrain and obstacles ahead (Nov 8): the highest ground (public elevation tiles, via the 3D preview module) and
+  // the tallest FAA obstacle 200 ft AGL or taller within 0.5 nm of the track over the next 5 nm, against GPS altitude.
+  const R2 = Math.PI / 180;
+  function fwd(p, b, nm) {
+    const d = nm / 3440.065, br = b * R2, l1 = p.lat * R2, o1 = p.lon * R2;
+    const l2 = Math.asin(Math.sin(l1) * Math.cos(d) + Math.cos(l1) * Math.sin(d) * Math.cos(br));
+    return { lat: l2 / R2, lon: (o1 + Math.atan2(Math.sin(br) * Math.sin(d) * Math.cos(l1), Math.cos(d) - Math.sin(l1) * Math.sin(l2))) / R2 };
+  }
+  let obs = [], obsAt = null, obsBusy = false;
+  function loadObs(p) {
+    if (obsBusy || typeof arcQuery !== "function" || (obsAt && dist(obsAt, p) < 3)) return;
+    obsBusy = true; obsAt = { lat: p.lat, lon: p.lon };
+    const e = [p.lon - 0.12, p.lat - 0.1, p.lon + 0.12, p.lat + 0.1];
+    arcQuery("Digital_Obstacle_File", { where: "AGL>=200", geometry: e.join(","), geometryType: "esriGeometryEnvelope", inSR: "4326", spatialRel: "esriSpatialRelIntersects", outFields: "AMSL,AGL,Type_Code,Lat_DD,Long_DD", resultRecordCount: "1000", returnGeometry: "false", f: "json" })
+      .then((j) => { obs = (j.features || []).map((f) => f.attributes || {}).map((o) => ({ lat: +o.Lat_DD, lon: +o.Long_DD, amsl: +o.AMSL || 0, type: String(o.Type_Code || "obstacle").toLowerCase() })).filter((o) => isFinite(o.lat)); })
+      .catch(() => {}).finally(() => { obsBusy = false; });
+  }
+  function ahead5(p, trk) {
+    const E = window.AeroPreview && AeroPreview.elev;
+    if (!E) return null;
+    let hi = null, at = 0, what = "ground", missing = 0;
+    for (let d = 0.25; d <= 5; d += 0.25) for (const off of [-0.5, 0, 0.5]) {
+      const c = fwd(p, trk, d), q = off ? fwd(c, (trk + 90) % 360, off) : c;
+      const m = E(q.lat, q.lon); if (m == null) { missing++; continue; }
+      const ft = m * 3.28084; if (hi == null || ft > hi) { hi = ft; at = d; what = "ground"; }
+    }
+    for (const o of obs) {
+      const b = brg(p, o), dd = dist(p, o), f = Math.cos((b - trk) * R2) * dd, side = Math.abs(Math.sin((b - trk) * R2)) * dd;
+      if (f > 0 && f <= 5 && side <= 0.5 && (hi == null || o.amsl > hi)) { hi = o.amsl; at = f; what = o.type; }
+    }
+    return hi == null ? null : { hi, at, what, partial: missing > 20 };
+  }
   const st = { watch: null, lock: null, pos: null, ni: 1, t0: null, last: null, near: null, nearAt: 0, el: null, f: null };
   function stop() {
     if (st.watch != null && navigator.geolocation) navigator.geolocation.clearWatch(st.watch);
@@ -140,6 +172,13 @@
     }
     const resMin = fuelDest != null && fi.gph ? (fuelDest / fi.gph) * 60 : null;
     const timer = st.t0 ? hm((Date.now() - st.t0) / 36e5) : "0:00";
+    loadObs(p);
+    const trk = p.trk != null ? p.trk : brg(p, nx);
+    const tz = ahead5(p, trk);
+    let tTile;
+    if (p.altFt == null) tTile = tile("Terrain ahead", "--", "needs GPS altitude");
+    else if (!tz) tTile = tile("Terrain ahead", "--", "loading terrain");
+    else { const clr = p.altFt - tz.hi; tTile = tile("Terrain ahead", `${clr >= 0 ? "+" : ""}${(Math.round(clr / 10) * 10).toLocaleString("en-US")} ft`, `highest ${tz.what} ${(Math.round(tz.hi / 10) * 10).toLocaleString("en-US")} ft MSL in ${tz.at.toFixed(1)} nm`, clr < 500 ? "bad" : clr < 1000 ? "warn" : ""); }
     out.innerHTML = `<div class="fl-grid">
         ${tile("Groundspeed", gs ? `${Math.round(gs)} kt` : "--")}
         ${tile("Track", p.trk != null ? `${deg(mag(p.trk, p))}M` : "--")}
@@ -149,6 +188,7 @@
         ${tile("Fuel now (estimate)", fuelNow != null ? `${Math.max(0, fuelNow).toFixed(1)} gal` : "--", fuelNow != null ? `burn ${fi.gph} gal per hr` : "Set start fuel and burn in the nav log")}
         ${tile("Fuel at destination", fuelDest != null ? `${fuelDest.toFixed(1)} gal` : "--", resMin != null ? `about ${Math.max(0, Math.floor(resMin))} min reserve` : "", resMin != null && resMin < 30 ? "bad" : resMin != null && resMin < 45 ? "warn" : "")}
         ${tile("Flight time", timer, st.t0 ? "since takeoff roll" : "starts above 40 kt")}
+        ${tTile}
       </div>
       <div class="fl-near"><h2>Nearest airports</h2>${st.near == null ? `<p class="muted" style="margin:0">Looking…</p>` : st.near.length ? `<ol style="margin:0 0 0 18px">${st.near.map((a) => `<li><b>${h(a.ident)}</b> ${h(a.name || "")}: ${a.d.toFixed(1)} nm, ${deg(a.b)}M${a.longest ? `, longest runway ${Number(a.longest).toLocaleString()} ft` : ""}</li>`).join("")}</ol>` : `<p class="muted" style="margin:0">None found within 30 nm.</p>`}</div>`;
     nearest();
@@ -159,7 +199,7 @@
     st.el = el; st.f = f; st.ni = 1; st.t0 = null; st.near = null;
     const pts = f ? (f.points || []).filter((x) => x.ident && isFinite(x.lat) && isFinite(x.lon)) : [];
     el.innerHTML = `<div class="page fly"><h1>Fly${pts.length > 1 ? ` <span class="muted" style="font-size:.55em">${h(pts[0].ident)} to ${h(pts[pts.length - 1].ident)}</span>` : ""}</h1>
-      <p class="fl-disc">Situational awareness only. Not for navigation. Fly with your certified avionics and approved charts.</p>
+      <p class="fl-disc">Situational awareness only. Not for navigation. Fly with your certified avionics and approved charts. Terrain ahead uses public elevation data and FAA obstacles 200 ft AGL or taller; it is not a terrain warning system.</p>
       ${pts.length > 1 ? `<div class="row"><button type="button" class="btn" id="flGo">Start flying</button>
         <label class="small" style="display:flex;align-items:center;gap:6px">Direct to <select id="flDto">${pts.slice(1).map((x, i) => `<option value="${i + 1}">${h(x.ident)}</option>`).join("")}</select></label>
         <a class="btn sec sm" href="#/maps">Map</a><a class="btn sec sm" href="#/brief">Brief</a></div>

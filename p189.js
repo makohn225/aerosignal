@@ -363,5 +363,5 @@
     const fly = document.querySelector(".fly .row"); if (fly) add(fly);
     add(document.querySelector("#mtrSec"));
   }).observe(document.getElementById("view") || document.body, { childList: true, subtree: true });
-  window.AeroPreview = { track, ahead, state: st };
+  window.AeroPreview = { track, ahead, elev, state: st };
 })();

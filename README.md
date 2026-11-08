@@ -129,6 +129,7 @@ Edge functions deploy to Supabase project `jcvrcckeprmpcruhxafm`.
 - p190 What's new card on the Plan page for returning pilots (titles only on phones), Hide to dismiss until the next update, and a What's new button on More; p189 edit Nov 8 caps the 3D pixel ratio at 1.5 for phones
 - p191 Your feedback: new feedback carries a device made client_token; More shows this device's feedback with status and reply (feedback.reply, public; admin_note stays internal); a one time note on Plan when a reply or status change arrives; the admin inbox has a Reply to tester box. When resolving feedback, write feedback.reply for the tester.
 - p182 edit Nov 6: Fly screen only derives speed and track from precise fixes and says when the device has no GPS (laptops)
+- p182 edit Nov 8: Terrain ahead tile on the Fly screen (highest ground within 0.5 nm of track over the next 5 nm from the elevation tiles via AeroPreview.elev, and FAA obstacles 200 ft AGL or taller), amber under 1,000 ft clearance and red under 500 ft; p190 What's new list refreshed (version 2026-11-08b)
 - Monthly SDR refresh job private.sdr_monthly on cron (approved Nov 6)
 - Edge functions ntsbsync (NTSB weekly update files and the public GitHub mirror into ntsb_events and ntsb_narratives) and embedchain (runs the embedding backfill in steps)
 - p153 edit: third mode, Pilot (S.modeKind = pilot, same civil role as Flight School)

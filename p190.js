@@ -4,12 +4,13 @@
    what was added since their last visit (returning pilots only; titles only on phones), each with a link that opens it. It shows again only when something
    new is added, and Hide puts it away. It is also reachable at any time from More. Saved on this device only. */
 (function () {
-  const VER = "2026-11-08", KEY = "vg_whatsnew";
+  const VER = "2026-11-08b", KEY = "vg_whatsnew";
   const ITEMS = [
-    ["#/preview", "Preview in 3D", "Fly your route over 3D terrain before you go, with towers and other tall obstacles shown, at your altitude or a set height above the ground."],
+    ["#/preview", "Preview in 3D", "Fly your route over 3D terrain before you go, with towers, current cloud bases, training route altitude blocks and day or night lighting."],
+    ["#/fly", "Terrain ahead on the Fly screen", "The Fly screen warns when the ground or a tall obstacle in the next 5 nm comes within 1,000 ft of your GPS altitude."],
+    ["#/more", "Replies to your feedback", "Feedback you send now shows its status and a reply under More, Your feedback."],
     ["#/maps", "Route list and VFR checkpoints", "Maps has a Route tab that lists every point with course and distance, and adds checkpoints about every 20 nm."],
     ["#/flights", "Avoid special use airspace", "Reroute around restricted areas, warning areas and MOAs at your altitude, with Undo."],
-    ["#/fly", "Fly screen", "Groundspeed, next waypoint, time and fuel to the destination and the nearest airports, from your phone's GPS."],
     ["#/brief", "Filing help and known issues", "The brief's flight plan sheet copies each item for 1800wxbrief.com and downloads a .fpl for your EFB; a new section shows FAA mechanic reports for your aircraft type."],
     ["#/flights", "Type routes the way you say them", "\"KPNS to KJKA\" now works; words like to, then and via are ignored."],
   ];

@@ -18,4 +18,21 @@
     if (f && !f.title) { f.title = "Send feedback"; f.setAttribute("aria-label", "Send feedback"); }
   };
   label(); setTimeout(label, 1500); setTimeout(label, 5000);
+  // Keep Ask stacked above Feedback on every page and screen size (Nov 8: on phones and tablets the Feedback button
+  // sits higher, above the tab bar, and the two overlapped on More, Airports, Logbook and other pages)
+  function stack() {
+    const a = document.getElementById("askFab"), f = document.getElementById("fbFab");
+    if (!a) return;
+    a.style.removeProperty("bottom");
+    if (!f) return;
+    const fs = getComputedStyle(f); if (fs.display === "none" || fs.visibility === "hidden") return;
+    const A = a.getBoundingClientRect(), F = f.getBoundingClientRect();
+    if (!A.width || !F.width) return;
+    const overlap = !(A.right <= F.left || F.right <= A.left || A.bottom <= F.top - 6 || F.bottom <= A.top);
+    if (overlap) a.style.setProperty("bottom", `${Math.round(window.innerHeight - F.top + 10)}px`, "important");
+  }
+  let st = 0; const kick = () => { clearTimeout(st); st = setTimeout(stack, 120); };
+  window.addEventListener("resize", kick); window.addEventListener("hashchange", () => setTimeout(stack, 500));
+  new MutationObserver(kick).observe(document.body, { childList: true, subtree: false, attributes: true, attributeFilter: ["class"] });
+  setTimeout(stack, 800); setTimeout(stack, 3000);
 })();

@@ -3,7 +3,9 @@
    Browsers keep each address's data separately, so the old link shows a short note with a Move my data button.
    The button opens the new link, the two pages confirm each other's exact address, and the data on this device is
    handed over window to window (never through a server or a URL). The pilot confirms on the new link before anything
-   is written there. Offline chart areas and automatic backups stay on the old link and rebuild on the new one. */
+   is written there. Offline chart areas and automatic backups stay on the old link and rebuild on the new one.
+   Nov 8: after a move (or I already moved) the old link opens the new one automatically (add ?stay=1 to stay), and
+   closing the note hides it for 3 days instead of only until the tab closes. */
 (function () {
   const OLD = window.__vgOld || "https://aerosignal-app.vercel.app";
   const NEW = window.__vgNew || "https://flyvigilyn.vercel.app";
@@ -29,19 +31,26 @@
 
   /* ---------- Old link: offer the move ---------- */
   if (here === OLD) {
+    // Once the data has been moved (or the pilot says it has), the old link simply opens the new one (Nov 8: the
+    // note kept coming back on every visit, for example from a home screen icon saved under the old link)
+    let moved = false; try { moved = !!localStorage.getItem("vg_moved"); } catch (e) {}
+    if (moved && !/[?&]stay=1/.test(location.search)) { location.replace(NEW + "/" + (location.hash || "")); return; }
     let shown = false;
-    try { shown = sessionStorage.getItem("vg_move_hide") === "1"; } catch (e) {}
+    try { const until = Number(localStorage.getItem("vg_move_hide_until") || 0); shown = sessionStorage.getItem("vg_move_hide") === "1" || until > Date.now(); } catch (e) {}
     const banner = () => {
-      if (shown || document.getElementById("vgMove")) return;
+      if (shown || moved || document.getElementById("vgMove")) return;
       const b = document.createElement("div");
       b.id = "vgMove"; b.setAttribute("role", "region"); b.setAttribute("aria-label", "New address");
       b.innerHTML = `<button class="x" type="button" aria-label="Close">&times;</button>
         <div><b>We have a new name and a new link: Vigilyn.</b> Your flights, logbook and settings are saved on this device under this old link.
         Move them to <b>flyvigilyn.vercel.app</b> in one tap, then use the new link from now on.</div>
-        <div class="row"><button class="btn mag" type="button" id="vgGo">Move my data</button><a class="btn sec" href="${NEW}/" id="vgOpen">Open the new link</a></div>
+        <div class="row"><button class="btn mag" type="button" id="vgGo">Move my data</button><a class="btn sec" href="${NEW}/" id="vgOpen">Open the new link</a><button class="btn sec" type="button" id="vgDone">I already moved</button></div>
+        <div class="small" style="margin-top:8px">Saved this app to your home screen? Remove that icon and add <b>flyvigilyn.vercel.app</b> instead.</div>
         <div class="small" id="vgMsg" style="margin-top:8px" hidden></div>`;
       document.body.appendChild(b);
-      b.querySelector(".x").onclick = () => { b.remove(); shown = true; try { sessionStorage.setItem("vg_move_hide", "1"); } catch (e) {} };
+      b.querySelector(".x").onclick = () => { b.remove(); shown = true; try { sessionStorage.setItem("vg_move_hide", "1"); localStorage.setItem("vg_move_hide_until", String(Date.now() + 3 * 864e5)); } catch (e) {} };
+      b.querySelector("#vgDone").onclick = () => { try { localStorage.setItem("vg_moved", String(Date.now())); } catch (e) {} location.replace(NEW + "/"); };
+      b.querySelector("#vgOpen").addEventListener("click", () => { try { localStorage.setItem("vg_move_hide_until", String(Date.now() + 3 * 864e5)); } catch (e) {} });
       const msg = (t) => { const m = b.querySelector("#vgMsg"); m.hidden = !t; m.textContent = t; };
       b.querySelector("#vgGo").onclick = () => {
         const w = window.open(`${NEW}/#/move`, "_blank");
@@ -50,7 +59,7 @@
         const onMsg = (e) => {
           if (e.origin !== NEW || e.source !== w || !e.data || typeof e.data !== "object") return;
           if (e.data.t === "vg-ready") w.postMessage({ t: "vg-data", data: snapshot(), at: Date.now() }, NEW);
-          else if (e.data.t === "vg-done") { msg(`Moved ${Number(e.data.n) || 0} saved items. Use flyvigilyn.vercel.app from now on. Your data is still here too, so nothing is lost.`); window.removeEventListener("message", onMsg); }
+          else if (e.data.t === "vg-done") { try { localStorage.setItem("vg_moved", String(Date.now())); } catch (err) {} msg(`Moved ${Number(e.data.n) || 0} saved items. Use flyvigilyn.vercel.app from now on. Your data is still here too, so nothing is lost.`); window.removeEventListener("message", onMsg); }
           else if (e.data.t === "vg-cancel") { msg("The move was cancelled. Nothing changed on either link."); window.removeEventListener("message", onMsg); }
         };
         window.addEventListener("message", onMsg);

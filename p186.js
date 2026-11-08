@@ -61,12 +61,16 @@
     for (let i = 1; i < P.length; i++) {
       const a = P[i - 1], b = P[i], len = dist(a, b);
       const n = Math.round(len / step) - 1;
+      // FAA airport data (p192): only public use airports (Nov 8)
+      let pub = null;
+      if (n > 0 && window.AeroFAA) { try { pub = await AeroFAA.publicSet(Math.min(a.lat, b.lat) - 0.2, Math.min(a.lon, b.lon) - 0.25, Math.max(a.lat, b.lat) + 0.2, Math.max(a.lon, b.lon) + 0.25); if (!pub.size) pub = null; } catch (e) { pub = null; } }
       for (let s = 1; s <= n; s++) {
         const t = s / (n + 1), at = lerp(a, b, t), want = len * t;
         const rows = await lookup(at);
         let best = null, bestScore = Infinity;
         for (const r of rows) {
           if (!r.ident || used.has(r.ident)) continue;
+          if (pub && r.kind === "airport" && !pub.has(r.ident)) continue;
           // Four character idents with a digit (2FL5, FD04) are almost always private fields: not a checkpoint to plan on
           if (r.kind === "airport" && /^[A-Z0-9]{4}$/.test(r.ident) && /\d/.test(r.ident) && !/^K/.test(r.ident)) continue;
           // Military fields need prior permission: not a checkpoint or a place to divert for most pilots

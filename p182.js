@@ -146,7 +146,10 @@
     try {
       const j = await fnGet(`divert?pts=${p.lat.toFixed(4)},${p.lon.toFixed(4)}&r=30&min=2000&paved=0`);
       const rows = (j && (j.airports || j.rows || j)) || [];
-      st.near = (Array.isArray(rows) ? rows : []).map((a) => ({ ...a, d: dist(p, { lat: +a.lat, lon: +a.lon }), b: mag(brg(p, { lat: +a.lat, lon: +a.lon }), p) })).sort((x, y) => x.d - y.d).slice(0, 5);
+      let list = Array.isArray(rows) ? rows : [];
+      // FAA airport data (p192): leave out private use fields (Nov 8)
+      if (window.AeroFAA) { try { const pub = await AeroFAA.publicSet(p.lat - 0.6, p.lon - 0.7, p.lat + 0.6, p.lon + 0.7); if (pub.size) list = list.filter((a) => pub.has(a.ident)); } catch (e) {} }
+      st.near = list.map((a) => ({ ...a, d: dist(p, { lat: +a.lat, lon: +a.lon }), b: mag(brg(p, { lat: +a.lat, lon: +a.lon }), p) })).sort((x, y) => x.d - y.d).slice(0, 5);
       render();
     } catch (e) { st.near = []; }
   }

@@ -178,14 +178,14 @@
       t = { data: null };
       tiles.set(key, t);
       const img = new Image(); img.crossOrigin = "anonymous";
-      img.onload = () => { try { const c = document.createElement("canvas"); c.width = c.height = 256; const g = c.getContext("2d", { willReadFrequently: true }); g.drawImage(img, 0, 0); t.data = g.getImageData(0, 0, 256, 256).data; } catch (e) { t.data = false; } };
+      img.onload = () => { try { const c = document.createElement("canvas"); c.width = c.height = 256; const g = c.getContext("2d", { willReadFrequently: true }); g.drawImage(img, 0, 0); const px = g.getImageData(0, 0, 256, 256).data, e = new Int16Array(65536); for (let i = 0, j = 0; i < 65536; i++, j += 4) e[i] = Math.round(px[j] * 256 + px[j + 1] + px[j + 2] / 256 - 32768); t.data = e; } catch (e) { t.data = false; } };
       img.onerror = () => { t.data = false; setTimeout(() => tiles.delete(key), 15000); };
       img.src = DEM.replace("{z}", z).replace("{x}", tx).replace("{y}", ty);
-      if (tiles.size > 400) tiles.delete(tiles.keys().next().value);
+      if (tiles.size > 220) tiles.delete(tiles.keys().next().value);
     }
     if (!t.data) return null;
-    const px = Math.min(255, Math.floor((x - tx) * 256)), py = Math.min(255, Math.floor((y - ty) * 256)), i = (py * 256 + px) * 4;
-    return t.data[i] * 256 + t.data[i + 1] + t.data[i + 2] / 256 - 32768;
+    const px = Math.min(255, Math.floor((x - tx) * 256)), py = Math.min(255, Math.floor((y - ty) * 256));
+    return t.data[py * 256 + px]; // heights kept as whole meters (Int16) to keep memory low on phones
   }
   const st = { map: null, raf: 0, run: false, s: 0, last: 0, alt: null, view: "cockpit" };
   function stop() { st.run = false; cancelAnimationFrame(st.raf); }

@@ -98,6 +98,16 @@
     }
     return hi == null ? null : { hi, at, what, partial: missing > 20 };
   }
+  // Load the elevation tiles along the whole route at the start, so Terrain ahead keeps working without a signal
+  function prefetch() {
+    const E = window.AeroPreview && AeroPreview.elev, f = st.f;
+    if (!E || !f) return;
+    const P = (f.points || []).filter((x) => isFinite(x.lat) && isFinite(x.lon));
+    for (let i = 1; i < P.length; i++) {
+      const a = P[i - 1], b = P[i], n = Math.max(1, Math.ceil(dist(a, b) / 2)), c = brg(a, b);
+      for (let k = 0; k <= n; k++) { const m = { lat: a.lat + ((b.lat - a.lat) * k) / n, lon: a.lon + ((b.lon - a.lon) * k) / n }; for (const off of [-3, 0, 3]) { const q = off ? fwd(m, (c + 90) % 360, off) : m; E(q.lat, q.lon); } }
+    }
+  }
   const st = { watch: null, lock: null, pos: null, ni: 1, t0: null, last: null, near: null, nearAt: 0, el: null, f: null };
   function stop() {
     if (st.watch != null && navigator.geolocation) navigator.geolocation.clearWatch(st.watch);
@@ -122,7 +132,7 @@
   }
   function start() {
     if (!navigator.geolocation) return toast("This device does not share a GPS position");
-    stop(); wake();
+    stop(); wake(); prefetch();
     st.watch = navigator.geolocation.watchPosition((g) => {
       const c = g.coords;
       feed({ acc: c.accuracy, lat: c.latitude, lon: c.longitude, altFt: c.altitude != null ? c.altitude * 3.28084 : null, kt: c.speed != null && c.speed >= 0 ? c.speed * 1.94384 : null, trk: c.heading != null && !isNaN(c.heading) && (c.speed || 0) > 1 ? c.heading : null });

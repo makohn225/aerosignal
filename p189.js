@@ -8,7 +8,10 @@
    Data: AWS open elevation tiles (Terrarium, public domain sources such as USGS 3DEP and SRTM), Esri World
    Imagery (as on the 2D map) and the FAA VFR sectional. MapLibre GL JS 4.7.1 is loaded from unpkg only when the page
    opens. Preview for situational awareness only: terrain and imagery are approximate and may be out of date,
-   and only FAA obstacle file entries 200 ft AGL or taller are drawn (added Nov 6); wires are not. Nothing is stored or sent. */
+   and only FAA obstacle file entries 200 ft AGL or taller are drawn (added Nov 6); wires are not. Nothing is stored or sent.
+   November 8: a Training route block altitude mode for MTRs (200 ft above each segment's published floor, under its
+   ceiling) with the route drawn in purple; cloud bases from current METARs near the route drawn as gray layers with a
+   ceiling readout; and the scene lit for day, dusk or night at the planned departure time. */
 (function () {
   if (typeof ROUTES === "undefined") return;
   const LIB = "https://unpkg.com/maplibre-gl@4.7.1/dist/";
@@ -107,6 +110,65 @@
       tops: { type: "FeatureCollection", features: list.map((o) => ({ type: "Feature", geometry: { type: "Point", coordinates: [o.lon, o.lat] }, properties: { t: `${Math.round(o.agl).toLocaleString("en-US")} AGL` } })) },
     };
   }
+  // ---- Nov 8 additions: training route blocks, cloud bases, daylight ----
+  function circle(c, nm) { const out = []; for (let i = 0; i <= 32; i++) { const q = ahead(c, (i * 360) / 32, nm); out.push([q.lon, q.lat]); } return out; }
+  function blk(val, uom, code) { let ft = Number(val) || 0; if (/FL/i.test(uom || "")) ft *= 100; const agl = /HEI|AGL|SFC/i.test(code || ""); return { ft, agl, txt: ft ? `${ft.toLocaleString("en-US")} ${agl ? "AGL" : "MSL"}` : "surface" }; }
+  async function loadMtr(f) {
+    const ids = [...new Set((String(f.route || "").toUpperCase().match(/\b(VR|IR|SR)\d{2,4}\b/g) || []))];
+    const out = [];
+    for (const q of ids.slice(0, 3)) {
+      let rows = []; try { rows = await rpc("mtr_by_ident", { q }); } catch (e) {}
+      for (const r of rows || []) {
+        const c = typeof r.coords === "string" ? JSON.parse(r.coords) : r.coords; if (!Array.isArray(c)) continue;
+        const lines = Array.isArray(c[0] && c[0][0]) ? c : [c];
+        const lo = blk(r.lower_val, r.lower_uom, r.lower_code), hi = blk(r.upper_val, r.upper_uom, r.upper_code);
+        out.push({ name: q, lines, lo, hi, text: `${lo.txt} to ${hi.txt}` });
+      }
+    }
+    return out;
+  }
+  async function clouds(pts) {
+    const ids = new Set(pts.filter((p) => p.kind === "airport" && /^K[A-Z0-9]{3}$/.test(p.ident)).map((p) => p.ident));
+    for (let i = 1; i < pts.length && ids.size < 10; i++) {
+      const a = pts[i - 1], b = pts[i], len = dist(a, b);
+      for (let k = 1; k < Math.min(4, Math.floor(len / 25) + 1) && ids.size < 10; k++) {
+        const t = k / Math.min(4, Math.floor(len / 25) + 1), q = { lat: a.lat + (b.lat - a.lat) * t, lon: a.lon + (b.lon - a.lon) * t };
+        try { const j = await fnGet(`nearfix?lat=${q.lat.toFixed(3)}&lon=${q.lon.toFixed(3)}&r=20&only=report`); for (const r of (j && j.rows) || []) if (r.kind === "airport" && /^K[A-Z0-9]{3}$/.test(r.ident) && ids.size < 10) ids.add(r.ident); } catch (e) {}
+      }
+    }
+    if (!ids.size) return [];
+    const j = await fnGet(`wx?ids=${[...ids].slice(0, 10).join(",")}`);
+    const where = new Map(); pts.forEach((p) => where.set(p.ident, p));
+    const out = [];
+    for (const m of (j && j.metar) || []) {
+      const raw = String(m.raw || ""), layers = [...raw.matchAll(/\b(BKN|OVC|VV)(\d{3})\b/g)].map((x) => ({ cov: x[1], ft: +x[2] * 100 }));
+      let loc = where.get(m.station);
+      if (!loc) { try { const r = await rpc("resolve_points", { tokens: [m.station] }); const a = (r || []).find((x) => x.ident === m.station); if (a) loc = { lat: +a.lat, lon: +a.lon }; } catch (e) {} }
+      if (!loc) continue;
+      elev(loc.lat, loc.lon); // start loading the elevation tile for the station
+      const low = layers.sort((x, y) => x.ft - y.ft)[0];
+      out.push({ station: m.station, lat: loc.lat, lon: loc.lon, baseAgl: low && low.ft <= 12000 ? low.ft : null, get ceilFt() { if (this.baseAgl == null) return null; const g = elev(this.lat, this.lon); return this.baseAgl + (g || 0) * FT; }, layer: low ? `${low.cov}${String(low.ft / 100).padStart(3, "0")}` : "" });
+    }
+    return out;
+  }
+  function daylight(map, f, pts, el) {
+    try {
+      const d = f.date && f.time ? new Date(`${f.date}T${f.time}`) : null;
+      if (!d || isNaN(d) || !(window.AeroLogTrack && AeroLogTrack.sunEl)) return;
+      const sun = AeroLogTrack.sunEl(d.getTime(), pts[0].lat, pts[0].lon);
+      const n = el.querySelector("#pvSunN");
+      const when = d.toLocaleString("en-US", { weekday: "short", hour: "numeric", minute: "2-digit" });
+      if (sun < -6) {
+        ["img", "vfr"].forEach((id) => { map.setPaintProperty(id, "raster-brightness-max", 0.22); map.setPaintProperty(id, "raster-saturation", -0.5); });
+        map.setSky({ "sky-color": "#06101f", "horizon-color": "#13233b", "fog-color": "#0b1424", "sky-horizon-blend": 0.5, "horizon-fog-blend": 0.5, "fog-ground-blend": 0.8, "atmosphere-blend": 0.2 });
+        if (n) n.textContent = `Lit for night: the sun is below the horizon at your planned departure (${when}).`;
+      } else if (sun < 6) {
+        ["img", "vfr"].forEach((id) => map.setPaintProperty(id, "raster-brightness-max", 0.6));
+        map.setSky({ "sky-color": "#3a5a8c", "horizon-color": "#f2a65a", "fog-color": "#d9a27a", "sky-horizon-blend": 0.7, "horizon-fog-blend": 0.6, "fog-ground-blend": 0.75, "atmosphere-blend": 0.4 });
+        if (n) n.textContent = `Lit for dusk or dawn: the sun is low at your planned departure (${when}).`;
+      } else if (n) n.textContent = `Daylight at your planned departure (${when}).`;
+    } catch (e) {}
+  }
   const tiles = new Map();
   function elev(lat, lon) {
     const z = 12, n = 2 ** z, x = ((lon + 180) / 360) * n, sl = Math.sin(lat * R), y = (0.5 - Math.log((1 + sl) / (1 - sl)) / (4 * Math.PI)) * n;
@@ -147,6 +209,9 @@
       <div class="pv-wrap"><div id="pvMap"></div><div class="pv-hud" id="pvHud"></div><div class="pv-load" id="pvLoad">Loading 3D terrain…</div></div>
       <input type="range" id="pvScrub" min="0" max="1000" value="0" aria-label="Position along the route">
       <p class="small" id="pvObsN" style="margin:6px 0 0">Loading FAA obstacles along the route…</p>
+      <p class="small" id="pvWxN" style="margin:4px 0 0">Loading current weather along the route…</p>
+      <p class="small" id="pvMtrN" style="margin:4px 0 0"></p>
+      <p class="small" id="pvSunN" style="margin:4px 0 0"></p>
       <p class="small muted">Terrain: AWS open elevation tiles (USGS and SRTM). Imagery: Esri World Imagery. Chart: FAA VFR sectional. For a low level or MTR route, choose Above ground and set the height you plan to fly.</p></div>`;
     const $ = (s) => el.querySelector(s);
     $("#pvMode").onchange = (e) => { if (e.target.value === "agl" && +$("#pvAlt").value > 3000) $("#pvAlt").value = 500; if (e.target.value === "msl" && +$("#pvAlt").value < 1000) $("#pvAlt").value = alt0; st.alt = null; frame(0, true); };
@@ -157,6 +222,14 @@
     // Terrain height in meters MSL, read straight from the elevation tiles (zoom 12, about 40 m per pixel) so it
     // works for the ground under the aircraft even when that spot is out of the camera's view.
     function ground(p) { return elev(p.lat, p.lon); }
+    function mtrAt(p) {
+      let best = null;
+      for (const g of st.mtr || []) for (const ln of g.lines) for (let i = 1; i < ln.length; i++) {
+        const a = { lat: ln[i - 1][1], lon: ln[i - 1][0] }, b = { lat: ln[i][1], lon: ln[i][0] }, d = xt(a, b, p).d;
+        if (d < 2.5 && (!best || d < best.d)) best = { ...g, d };
+      }
+      return best;
+    }
     function frame(dtSec, force) {
       if (!st.map) return;
       const mode = $("#pvMode").value, setFt = Math.max(100, +$("#pvAlt").value || alt0), mult = +$("#pvSpd").value || 15;
@@ -165,11 +238,15 @@
       const gM = ground(p);
       // Height above ground: look a little ahead too, so the camera climbs before a ridge, and smooth it
       let want;
-      if (mode === "agl") {
+      const seg = mode === "mtr" ? mtrAt(p) : null;
+      const follow = mode === "agl" || (seg && seg.lo.agl);
+      const aglFt = mode === "agl" ? setFt : seg ? seg.lo.ft + 200 : setFt;
+      if (follow) {
         let g = gM || 0;
         for (const d of [0.3, 0.6, 1]) { const q = ahead(p, p.crs, d); const gq = ground(q); if (gq != null) g = Math.max(g, gq); }
-        want = g + setFt / FT;
-      } else want = setFt / FT;
+        want = g + aglFt / FT;
+        if (seg && !seg.hi.agl && seg.hi.ft) want = Math.min(want, (seg.hi.ft - 100) / FT);
+      } else want = (seg ? seg.lo.ft + 200 : setFt) / FT;
       st.alt = st.alt == null || force ? want : st.alt + (want - st.alt) * Math.min(1, dtSec * 1.5);
       const altM = st.alt;
       try {
@@ -190,10 +267,16 @@
       // The tallest obstacle within 1 nm of the track in the next 5 nm
       let ob = null;
       for (const o of st.obs || []) { const b2 = brg(p, o), dd = dist(p, o); const off = Math.abs(Math.sin(((b2 - p.crs) * R))) * dd, fwd = Math.cos((b2 - p.crs) * R) * dd; if (fwd > 0 && fwd < 5 && off < 1 && (!ob || o.amsl > ob.amsl)) ob = { ...o, fwd }; }
+      // Training route block and the nearest reported cloud base
+      let blk = "";
+      if (seg) { const loMsl = seg.lo.agl ? (gFt || 0) + seg.lo.ft : seg.lo.ft, hiMsl = seg.hi.agl ? (gFt || 0) + seg.hi.ft : seg.hi.ft; const out = mslFt < loMsl - 50 || (hiMsl && mslFt > hiMsl + 50); blk = `<div class="${out ? "low" : ""}"><small>Route block</small>${h(seg.text)}</div>`; }
+      else if (mode === "mtr") blk = `<div><small>Route block</small>off the training route</div>`;
+      let cl = null; for (const c of st.wx || []) { if (!c.ceilFt) continue; const d = dist(p, c); if (d < 25 && (!cl || d < cl.d)) cl = { ...c, d }; }
+      const clHtml = cl ? `<div class="${mslFt > cl.ceilFt - 500 ? "low" : ""}"><small>Ceiling ${h(cl.station)}</small>${Math.round(cl.ceilFt / 100) * 100} MSL</div>` : "";
       const obHtml = ob ? `<div class="${ob.amsl > mslFt - 500 ? "low" : ""}"><small>Obstacle ahead</small>${h(ob.type)} ${Math.round(ob.amsl).toLocaleString("en-US")} MSL, ${ob.fwd.toFixed(1)} nm</div>` : "";
       $("#pvHud").innerHTML = `<div><small>Next</small>${h(p.next.ident)} ${p.toNext.toFixed(1)} nm</div><div><small>Course</small>${deg(p.crs)}T</div>
         <div><small>Altitude</small>${Math.round(mslFt / 10) * 10} ft MSL</div><div><small>Ground</small>${gFt == null ? "…" : `${Math.round(gFt / 10) * 10} ft`}</div>
-        <div class="${agl != null && agl < 500 ? "low" : ""}"><small>Above ground</small>${agl == null ? "…" : `${Math.round(agl / 10) * 10} ft`}</div><div><small>Flown</small>${Math.round(st.s)} of ${Math.round(T.total)} nm</div>${obHtml}`;
+        <div class="${agl != null && agl < 500 ? "low" : ""}"><small>Above ground</small>${agl == null ? "…" : `${Math.round(agl / 10) * 10} ft`}</div><div><small>Flown</small>${Math.round(st.s)} of ${Math.round(T.total)} nm</div>${blk}${clHtml}${obHtml}`;
       if (!force) $("#pvScrub").value = String(Math.round((st.s / T.total) * 1000));
       if (st.s >= T.total && st.run) { stop(); $("#pvPlay").textContent = "Replay"; }
     }
@@ -238,7 +321,29 @@
       const start = () => { if (started) return; started = true; frame(0, true); setTimeout(() => frame(0, true), 1500); };
       map.once("style.load", start); map.once("load", start);
       map.once("render", () => { const l = $("#pvLoad"); if (l) l.remove(); });
-      st.obs = [];
+      st.obs = []; st.mtr = []; st.wx = [];
+      map.once("style.load", () => {
+        daylight(map, f, pts, el);
+        loadMtr(f).then((segs) => {
+          if (st.map !== map || !segs.length) return;
+          st.mtr = segs;
+          map.addSource("mtr", { type: "geojson", data: { type: "FeatureCollection", features: segs.map((g) => ({ type: "Feature", geometry: { type: "MultiLineString", coordinates: g.lines }, properties: {} })) } });
+          map.addLayer({ id: "mtr", type: "line", source: "mtr", paint: { "line-color": "#7a5cff", "line-width": 3, "line-dasharray": [2, 1] } }, "route");
+          const m = $("#pvMode"); if (m && !m.querySelector('[value="mtr"]')) { m.insertAdjacentHTML("beforeend", `<option value="mtr">Training route block</option>`); m.value = "mtr"; st.alt = null; frame(0, true); }
+          const n = el.querySelector("#pvMtrN"); if (n) n.textContent = `Training route ${segs[0].name} drawn in purple. Training route block flies 200 ft above each segment's published floor.`;
+        }).catch(() => {});
+        clouds(pts).then((list) => {
+          if (st.map !== map) return;
+          st.wx = list;
+          const withCeil = list.filter((c) => c.baseAgl != null);
+          if (withCeil.length) {
+            map.addSource("cld", { type: "geojson", data: { type: "FeatureCollection", features: withCeil.map((c) => ({ type: "Feature", geometry: { type: "Polygon", coordinates: [circle(c, 8)] }, properties: { b: c.baseAgl / FT, t: c.baseAgl / FT + 300 } })) } });
+            map.addLayer({ id: "cld", type: "fill-extrusion", source: "cld", paint: { "fill-extrusion-color": "#f4f6f8", "fill-extrusion-base": ["get", "b"], "fill-extrusion-height": ["get", "t"], "fill-extrusion-opacity": 0.45 } });
+          }
+          const n = el.querySelector("#pvWxN");
+          if (n) n.textContent = !list.length ? "No current weather reports near the route." : withCeil.length ? `Cloud bases from current reports at ${withCeil.map((c) => `${c.station} ${c.layer}`).join(", ")} are drawn as gray layers about 8 nm across. Current reports, not a forecast.` : `Current reports at ${list.map((c) => c.station).join(", ")} show no ceiling.`;
+        }).catch(() => { const n = el.querySelector("#pvWxN"); if (n) n.textContent = "Current weather could not load."; });
+      });
       map.once("style.load", () => obstacles(pts).then((list) => {
         if (st.map !== map) return;
         st.obs = list; const g = obsGeo(list);

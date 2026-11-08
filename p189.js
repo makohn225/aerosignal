@@ -203,7 +203,8 @@
       const line = { type: "Feature", geometry: { type: "LineString", coordinates: pts.map((p) => [p.lon, p.lat]) }, properties: {} };
       const marks = { type: "FeatureCollection", features: pts.map((p) => ({ type: "Feature", geometry: { type: "Point", coordinates: [p.lon, p.lat] }, properties: { n: p.ident } })) };
       const map = new ml.Map({
-        container: $("#pvMap"), maxPitch: 85, attributionControl: { compact: true },
+        container: $("#pvMap"), maxPitch: 85, pixelRatio: Math.min(window.devicePixelRatio || 1, 1.5), // lighter on phones and high density screens (Nov 8)
+        attributionControl: { compact: true },
         style: { version: 8, glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
           sources: {
             img: { type: "raster", tiles: [IMG], tileSize: 256, maxzoom: 18, attribution: "Imagery Esri, Maxar, Earthstar Geographics" },

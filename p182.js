@@ -148,7 +148,12 @@
       const rows = (j && (j.airports || j.rows || j)) || [];
       let list = Array.isArray(rows) ? rows : [];
       // FAA airport data (p192): leave out private use fields (Nov 8)
-      if (window.AeroFAA) { try { const pub = await AeroFAA.publicSet(p.lat - 0.6, p.lon - 0.7, p.lat + 0.6, p.lon + 0.7); if (pub.size) list = list.filter((a) => pub.has(a.ident)); } catch (e) {} }
+      if (window.AeroFAA) { try {
+        const pub = await AeroFAA.publicSet(p.lat - 0.6, p.lon - 0.7, p.lat + 0.6, p.lon + 0.7); if (pub.size) list = list.filter((a) => pub.has(a.ident));
+        const rows = await AeroFAA.box(p.lat - 0.6, p.lon - 0.7, p.lat + 0.6, p.lon + 0.7, true), fm = new Map();
+        for (const r of rows) { fm.set(r.ident, r.fuel_types); if (/^K[A-Z0-9]{3}$/.test(r.ident)) fm.set(r.ident.slice(1), r.fuel_types); }
+        list = list.map((a) => ({ ...a, fuel: fm.get(a.ident) || null }));
+      } catch (e) {} }
       st.near = list.map((a) => ({ ...a, d: dist(p, { lat: +a.lat, lon: +a.lon }), b: mag(brg(p, { lat: +a.lat, lon: +a.lon }), p) })).sort((x, y) => x.d - y.d).slice(0, 5);
       render();
     } catch (e) { st.near = []; }
@@ -203,7 +208,7 @@
         ${tile("Flight time", timer, st.t0 ? "since takeoff roll" : "starts above 40 kt")}
         ${tTile}
       </div>
-      <div class="fl-near"><h2>Nearest airports</h2>${st.near == null ? `<p class="muted" style="margin:0">Looking…</p>` : st.near.length ? `<ol style="margin:0 0 0 18px">${st.near.map((a) => `<li><b>${h(a.ident)}</b> ${h(a.name || "")}: ${a.d.toFixed(1)} nm, ${deg(a.b)}M${a.longest ? `, longest runway ${Number(a.longest).toLocaleString()} ft` : ""}</li>`).join("")}</ol>` : `<p class="muted" style="margin:0">None found within 30 nm.</p>`}</div>`;
+      <div class="fl-near"><h2>Nearest airports</h2>${st.near == null ? `<p class="muted" style="margin:0">Looking…</p>` : st.near.length ? `<ol style="margin:0 0 0 18px">${st.near.map((a) => `<li><b>${h(a.ident)}</b> ${h(a.name || "")}: ${a.d.toFixed(1)} nm, ${deg(a.b)}M${a.longest ? `, longest runway ${Number(a.longest).toLocaleString()} ft` : ""}${a.fuel ? `, fuel ${h(AeroFAA.fuelText(a.fuel))}` : a.fuel === null && window.AeroFAA ? ", no fuel listed" : ""}</li>`).join("")}</ol>` : `<p class="muted" style="margin:0">None found within 30 nm.</p>`}</div>`;
     nearest();
   }
 

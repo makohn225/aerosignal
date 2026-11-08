@@ -6,6 +6,8 @@
    2. The brief gets a Fuel stops panel (#fsPanel, after #kiPanel): from the nav log start fuel, burn and speed and a
       chosen reserve, the range with no wind; when the route is longer, public airports within 15 nm of the line
       that sell the chosen fuel are suggested as stops, each about as far along as the fuel allows, with Add stop.
+   2b. (Nov 8 evening) The same panel checks the arrival: estimated arrival time against the destination's attended
+      hours, private use, no fuel listed, and night arrivals where lighting is by remark.
    3. AeroFAA.publicSet(box) gives other modules the public use airports in an area (VFR checkpoints and the Fly
       screen's nearest airports use it to leave out private fields). */
 (function () {
@@ -25,7 +27,13 @@
   document.head.appendChild(css);
   const tc = (t) => String(t || "").toLowerCase().replace(/\b([a-z])/g, (m) => m.toUpperCase()).replace(/\b(Nas|Afb|Rgnl|Intl|Muni|Fld)\b/g, (m) => ({ Nas: "NAS", Afb: "AFB", Rgnl: "Regional", Intl: "International", Muni: "Municipal", Fld: "Field" }[m]));
   const fuelText = (t) => (t ? t.split(",").map((x) => FUEL[x.trim()] || x.trim()).join(", ") : "None listed");
-  const attText = (t) => (!t ? "Not listed" : /UNATNDD/.test(t) ? "Unattended" : t.replace(/\bALL ALL ALL\b/g, "Every day, all hours").replace(/\bALL\b/g, "All").replace(/\s*;\s*/g, "; "));
+  const attText = (t) => {
+    if (!t) return "Not listed";
+    if (/UNAT/.test(t)) return "Unattended";
+    const day = (d) => d.replace(/\s*-\s*/g, "-").replace(/^ALL$/, "daily").replace(/M-F/, "MON-FRI").replace(/\b([A-Z]{3})\b/g, (m) => m[0] + m.slice(1).toLowerCase()).replace(/-/g, " to ");
+    const hrs = (x) => x.replace(/\s*-\s*/g, "-").replace(/^ALL$/, "all hours").replace(/^(IREG|IRREG)$/, "irregular hours").replace(/^INTMNT$/, "intermittently").replace(/^DALGT$/, "daylight hours").replace(/^ON CALL$/, "on call").replace(/DUSK|DARK/, "dusk").replace(/^([0-9]{4})-/, "$1 to ");
+    return t.split(";").map((e) => { const m = /^(\S+)\s+(.+?)\s+(ALL|IREG|IRREG|INTMNT|ON CALL|DALGT|DAWN\s*-\s*DUSK|SR-SS|[0-9]{4}\s*-\s*\S+)$/.exec(e.trim().replace(/\s+/g, " ")); if (!m) { const x = e.trim(); return /^(IREG|IRREG)$/.test(x) ? "Irregular hours" : /^INTMNT$/.test(x) ? "Intermittent" : /ON CALL/.test(x) ? "On call" : x; } const mo = m[1] === "ALL" ? "" : day(m[1]) + ": "; const dd = day(m[2]); return `${mo}${dd.charAt(0).toUpperCase() + dd.slice(1)} ${hrs(m[3])}`; }).join("; ");
+  };
   function dist(a, b) { const p1 = a.lat * R, p2 = b.lat * R, x = Math.sin((p2 - p1) / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(((b.lon - a.lon) * R) / 2) ** 2; return 6880.13 * Math.asin(Math.min(1, Math.sqrt(x))); }
   function along(a, b, q) { const k = Math.cos(((a.lat + b.lat) / 2) * R) * 60, bx = (b.lon - a.lon) * k, by = (b.lat - a.lat) * 60, px = (q.lon - a.lon) * k, py = (q.lat - a.lat) * 60, L = Math.hypot(bx, by) || 1, t = (px * bx + py * by) / L; return { t, x: Math.abs(bx * py - by * px) / L, L }; }
 
@@ -111,6 +119,61 @@
     f.points = P; f.route = P.map((p) => p.ident).join(" "); f.updated = Date.now(); save();
     toast(`${st.ident} added as a fuel stop`); window.dispatchEvent(new HashChangeEvent("hashchange"));
   }
+  // ---------- arrival check (Nov 8 evening) ----------
+  const DAYS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"], MONS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+  function inRange(list, from, to, v) { const a = list.indexOf(from), b = list.indexOf(to), x = list.indexOf(v); if (a < 0 || b < 0 || x < 0) return null; return a <= b ? x >= a && x <= b : x >= a || x <= b; }
+  function partHas(part, list, v) {
+    part = part.replace(/\s*-\s*/g, "-").trim();
+    if (!part || part === "ALL") return true;
+    return part.split(/[,&]/).some((seg) => { seg = seg.trim(); if (seg === "WKDY" || seg === "WKDAYS") seg = "MON-FRI"; if (seg === "WKND" || seg === "WKENDS") seg = "SAT-SUN"; const m = /^([A-Z]{3})-([A-Z]{3})$/.exec(seg); if (m) return !!inRange(list, m[1], m[2], v); return seg.slice(0, 3) === v; });
+  }
+  // attendance text and a local Date -> "attended", "closed", "unattended" or "unknown"
+  function attendedAt(text, d, sunUp) {
+    if (!text) return "unknown";
+    if (/UNAT/.test(text)) return "unattended";
+    let unknown = false, dayMatch = false, parsed = 0;
+    for (const e of text.split(";").map((x) => x.trim()).filter(Boolean)) {
+      const m = /^(\S+(?:\s*-\s*[A-Z]{3})?)\s+(.+?)\s+(ALL|IREG|IRREG|INTMNT|ON CALL|DALGT|DAWN-DUSK|SR-SS|[0-9]{4}\s*-\s*(?:[0-9]{4}|DUSK|SS|DARK)|DAWN\s*-\s*[0-9]{4})$/.exec(e.replace(/\s+/g, " ").replace(/\bM-F\b/, "MON-FRI"));
+      if (!m) { unknown = true; continue; }
+      parsed++;
+      if (!partHas(m[1], MONS, MONS[d.getMonth()]) || !partHas(m[2], DAYS, DAYS[d.getDay()])) continue;
+      dayMatch = true;
+      const hrs = m[3].replace(/\s+/g, "");
+      if (hrs === "ALL") return "attended";
+      if (/^(IREG|IRREG|INTMNT|ONCALL)$/.test(hrs)) { unknown = true; continue; }
+      if (/DALGT|DAWN-DUSK|SR-SS/.test(hrs)) { if (sunUp == null) unknown = true; else if (sunUp) return "attended"; continue; }
+      const t = d.getHours() * 100 + d.getMinutes();
+      const hm = /^([0-9]{4})-([0-9]{4})$/.exec(hrs);
+      if (hm) { const a = +hm[1], b = +hm[2]; if (a <= b ? t >= a && t <= b : t >= a || t <= b) return "attended"; continue; }
+      const dusk = /^([0-9]{4})-(DUSK|SS|DARK)$/.exec(hrs);
+      if (dusk) { if (t >= +dusk[1] && (sunUp == null ? t <= 1800 : sunUp)) return "attended"; continue; }
+    }
+    if (!parsed) return "unknown";
+    return unknown ? "unknown" : "closed";
+  }
+  async function arrival(f) {
+    const P = (f.points || []).filter((p) => isFinite(p.lat) && isFinite(p.lon)); if (P.length < 2) return null;
+    const dest = P[P.length - 1]; if (dest.kind && dest.kind !== "airport") return null;
+    let a = null; try { [a] = (await rpc("faa_airport", { code: dest.ident })) || []; } catch (e) {}
+    if (!a) return null;
+    let eta = null;
+    const dep = f.date && f.time ? new Date(`${f.date}T${f.time}`) : null;
+    if (dep && !isNaN(dep)) { let tot = 0; for (let i = 1; i < P.length; i++) tot += dist(P[i - 1], P[i]); const tas = inputs(f).tas || 110; eta = new Date(dep.getTime() + (tot / tas) * 36e5 + 10 * 60000); }
+    let sunUp = null; try { if (eta && window.AeroLogTrack && AeroLogTrack.sunEl) sunUp = AeroLogTrack.sunEl(eta.getTime(), dest.lat, dest.lon) > -0.8; } catch (e) {}
+    const att = eta ? attendedAt(a.attendance, eta, sunUp) : "unknown";
+    const notes = [];
+    if (a.facility_use === "PR") notes.push({ bad: true, t: `${a.ident} is a private use airport: get permission before you land.` });
+    if (eta) {
+      const when = eta.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+      if (att === "closed") notes.push({ bad: true, t: `You arrive about ${when}, outside ${a.ident}'s attended hours (${attText(a.attendance)}). Fuel and services may not be available; check self serve fuel and call ahead.` });
+      else if (att === "unattended") notes.push({ bad: false, t: `${a.ident} is unattended. ${a.fuel_types ? "Fuel listed: " + fuelText(a.fuel_types) + ", likely self serve." : "No fuel listed."}` });
+      else if (att === "attended") notes.push({ bad: false, t: `You arrive about ${when}, within ${a.ident}'s attended hours.` });
+      else notes.push({ bad: false, t: `${a.ident} attended hours: ${attText(a.attendance)}. Call ahead to confirm.` });
+      if (sunUp === false && /SEE RMK/.test(a.lgt_sked || "")) notes.push({ bad: false, t: `Night arrival: ${a.ident}'s runway lighting schedule is in the Chart Supplement remarks; check it and the pilot controlled lighting frequency.` });
+    }
+    if (!a.fuel_types) notes.push({ bad: false, t: `No fuel is listed at ${a.ident}; plan fuel for the return or the next leg.` });
+    return { a, eta, att, notes };
+  }
   let fsBusy = false;
   async function briefPanel() {
     if (fsBusy || !/^#\/brief(\/|$|\?)/.test(location.hash || "")) return;
@@ -135,7 +198,9 @@
       else if (!r.stops.length) body = `<p style="margin:0"><b>No fuel stop needed.</b> Range about ${Math.floor(r.range)} nm with no wind, keeping a ${rm} minute reserve; the route is ${Math.round(r.total)} nm.</p>`;
       else body = `<p style="margin:0 0 6px"><b>Range about ${Math.floor(r.range)} nm</b> with no wind and a ${rm} minute reserve, for a ${Math.round(r.total)} nm route. Suggested stops at public airports that sell ${h(fk === "JET" ? "Jet A" : fk === "MOGAS" ? "mogas or UL94" : "100LL")}:</p>
         <table>${r.stops.map((s, i) => s.none ? `<tr><td colspan="3"><b>No suitable airport within reach</b> after ${Math.round(s.from)} nm. Plan this leg yourself.</td></tr>` : `<tr><td><b>${h(s.ident)}</b><small>${h(tc(s.name))}, ${h(tc(s.city))} ${h(s.state || "")}</small></td><td>${Math.round(s.s)} nm along, ${s.x.toFixed(1)} nm off route<small>${h(fuelText(s.fuel_types))} · ${h(attText(s.attendance))}</small></td><td><button type="button" class="btn sec sm" data-add="${i}">Add stop</button></td></tr>`).join("")}</table>`;
-      sec.innerHTML = `<h2>Fuel stops</h2>${ctl}${body}<p class="small muted" style="margin:8px 0 0">Planning aid: no wind, 10% margin, from your nav log numbers and FAA airport data. Confirm fuel and hours by phone, and check your own fuel plan.</p>`;
+      let arr = null; try { arr = await arrival(f); } catch (e) {}
+      const arrHtml = arr && arr.notes.length ? `<div style="margin:10px 0 0"><b class="small">Arrival at ${h(arr.a.ident)}</b><ul style="margin:4px 0 0 18px">${arr.notes.map((n) => `<li${n.bad ? ' style="color:#ffb648;font-weight:600"' : ""}>${h(n.t)}</li>`).join("")}</ul></div>` : "";
+      sec.innerHTML = `<h2>Fuel stops</h2>${ctl}${body}${arrHtml}<p class="small muted" style="margin:8px 0 0">Planning aid: no wind, 10% margin, from your nav log numbers and FAA airport data. Confirm fuel and hours by phone, and check your own fuel plan.</p>`;
       sec.querySelector("[data-fk]").value = fk; sec.querySelector("[data-rm]").value = String(rm);
       sec.querySelector("[data-fk]").onchange = (e) => { setPref("vg_fs_fuel", e.target.value); sec.dataset.k = ""; briefPanel(); };
       sec.querySelector("[data-rm]").onchange = (e) => { setPref("vg_fs_res", e.target.value); sec.dataset.k = ""; briefPanel(); };
@@ -154,5 +219,5 @@
     if (list.every((m) => m.target.closest && m.target.closest("#fsPanel, #faPanel"))) return;
     clearTimeout(t); t = setTimeout(() => { try { airportPage(); briefPanel(); } catch (e) { console.error(e); } }, 450);
   }).observe(document.getElementById("view") || document.body, { childList: true, subtree: true });
-  window.AeroFAA = { box, publicSet, plan, fuelText, attText };
+  window.AeroFAA = { box, publicSet, plan, fuelText, attText, attendedAt, arrival };
 })();

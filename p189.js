@@ -151,11 +151,14 @@
     }
     return out;
   }
-  function daylight(map, f, pts, el) {
+  async function daylight(map, f, pts, el) {
     try {
       const d = f.date && f.time ? new Date(`${f.date}T${f.time}`) : null;
       if (!d || isNaN(d) || !(window.AeroLogTrack && AeroLogTrack.sunEl)) return;
-      const sun = AeroLogTrack.sunEl(d.getTime(), pts[0].lat, pts[0].lon);
+      // The planned time is local at the departure airport, not on this device (Nov 9, with p192's time zones)
+      let ms = d.getTime(); try { if (window.AeroFAA && AeroFAA.depMs) ms = (await AeroFAA.depMs(f)) || ms; } catch (e) {}
+      if (!map.getLayer || !map.getLayer("img")) return;
+      const sun = AeroLogTrack.sunEl(ms, pts[0].lat, pts[0].lon);
       const n = el.querySelector("#pvSunN");
       const when = d.toLocaleString("en-US", { weekday: "short", hour: "numeric", minute: "2-digit" });
       if (sun < -6) {
@@ -183,6 +186,7 @@
       img.src = DEM.replace("{z}", z).replace("{x}", tx).replace("{y}", ty);
       if (tiles.size > 220) tiles.delete(tiles.keys().next().value);
     }
+    else if (t.data && tiles.keys().next().value === key && tiles.size > 150) { tiles.delete(key); tiles.set(key, t); } // keep tiles in use from being dropped first
     if (!t.data) return null;
     const px = Math.min(255, Math.floor((x - tx) * 256)), py = Math.min(255, Math.floor((y - ty) * 256));
     return t.data[py * 256 + px]; // heights kept as whole meters (Int16) to keep memory low on phones
@@ -352,7 +356,7 @@
         map.addLayer({ id: "obsT", type: "symbol", source: "obsT", minzoom: 12, layout: { "text-field": ["get", "t"], "text-size": 11, "text-font": ["Open Sans Semibold"], "text-offset": [0, -1] }, paint: { "text-color": "#fff", "text-halo-color": "#b00020", "text-halo-width": 1.5 } });
         const n = el.querySelector("#pvObsN"); if (n) n.textContent = list.length ? `${list.length} obstacle${list.length === 1 ? "" : "s"} 200 ft AGL or taller within 3 nm of the route ${list.length === 1 ? "is" : "are"} drawn in red (FAA Digital Obstacle File).` : "No obstacles 200 ft AGL or taller were found within 3 nm of the route.";
       }));
-    }).catch((e) => { const l = $("#pvLoad"); if (l) l.textContent = e.message || "3D preview could not load."; });
+    }).catch((e) => { const l = $("#pvLoad"); if (l) l.textContent = /webgl/i.test(String(e && e.message)) ? "This browser or device cannot draw 3D maps (WebGL is turned off or not supported). Try another browser or device, or use the Maps page." : (e && e.message) || "3D preview could not load."; });
   };
   window.addEventListener("hashchange", () => { if (!/^#\/preview/.test(location.hash)) { stop(); try { st.map && st.map.remove(); } catch (e) {} st.map = null; } });
 

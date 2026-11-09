@@ -197,17 +197,25 @@
   }
   function clockAt(ms, tz) { if (!tz) return new Date(ms); const o = offsetMin(ms, tz); const u = new Date(ms + o * 60000); return new Date(u.getUTCFullYear(), u.getUTCMonth(), u.getUTCDate(), u.getUTCHours(), u.getUTCMinutes()); }
   const tzName = (ms, tz) => { try { return new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "short" }).formatToParts(new Date(ms)).find((x) => x.type === "timeZoneName").value; } catch (e) { return ""; } };
+  // Planned departure as an instant, read as local time at the departure airport (also used by the 3D preview's lighting)
+  const aptC = new Map();
+  function apt(code) { code = String(code || "").toUpperCase(); if (!aptC.has(code)) aptC.set(code, rpc("faa_airport", { code }).then((r) => (r || [])[0] || null).catch(() => (aptC.delete(code), null))); return aptC.get(code); }
+  async function depMs(f) {
+    if (!f || !f.date || !f.time) return null;
+    const P = (f.points || []).filter((p) => isFinite(p.lat) && isFinite(p.lon)); let tz0 = null;
+    if (P.length) { const a0 = await apt(P[0].ident); if (a0) tz0 = tzFor(a0.state, a0.lat, a0.lon); }
+    const ms = instantAt(f.date, f.time, tz0); return isFinite(ms) ? ms : null;
+  }
   async function arrival(f, nStops) {
     const P = (f.points || []).filter((p) => isFinite(p.lat) && isFinite(p.lon)); if (P.length < 2) return null;
     const dest = P[P.length - 1]; if (dest.kind && dest.kind !== "airport") return null;
-    let a = null; try { [a] = (await rpc("faa_airport", { code: dest.ident })) || []; } catch (e) {}
+    const a = await apt(dest.ident);
     if (!a) return null;
     // Departure time is local at the departure airport; attended hours are local at the destination
     let eta = null, etaMs = null, tzD = tzFor(a.state, a.lat, a.lon), zone = "";
     if (f.date && f.time) {
-      let tz0 = null; try { const [a0] = (await rpc("faa_airport", { code: P[0].ident })) || []; if (a0) tz0 = tzFor(a0.state, a0.lat, a0.lon); } catch (e) {}
-      const depMs = instantAt(f.date, f.time, tz0);
-      if (isFinite(depMs)) { let tot = 0; for (let i = 1; i < P.length; i++) tot += dist(P[i - 1], P[i]); const tas = inputs(f).tas || 110; etaMs = depMs + (tot / tas) * 36e5 + 10 * 60000 + (nStops || 0) * 30 * 60000; eta = clockAt(etaMs, tzD); zone = tzD ? tzName(etaMs, tzD) : ""; }
+      const depAt = await depMs(f);
+      if (depAt != null) { let tot = 0; for (let i = 1; i < P.length; i++) tot += dist(P[i - 1], P[i]); const tas = inputs(f).tas || 110; etaMs = depAt + (tot / tas) * 36e5 + 10 * 60000 + (nStops || 0) * 30 * 60000; eta = clockAt(etaMs, tzD); zone = tzD ? tzName(etaMs, tzD) : ""; }
     }
     let sunUp = null; try { if (etaMs && window.AeroLogTrack && AeroLogTrack.sunEl) sunUp = AeroLogTrack.sunEl(etaMs, dest.lat, dest.lon) > -0.8; } catch (e) {}
     const att = eta ? attendedAt(a.attendance, eta, sunUp) : "unknown";
@@ -270,5 +278,5 @@
     if (list.every((m) => m.target.closest && m.target.closest("#fsPanel, #faPanel"))) return;
     clearTimeout(t); t = setTimeout(() => { try { airportPage(); briefPanel(); } catch (e) { console.error(e); } }, 450);
   }).observe(document.getElementById("view") || document.body, { childList: true, subtree: true });
-  window.AeroFAA = { box, publicSet, plan, fuelText, attText, attendedAt, arrival, tzFor };
+  window.AeroFAA = { box, publicSet, plan, fuelText, attText, attendedAt, arrival, tzFor, depMs };
 })();

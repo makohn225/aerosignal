@@ -103,9 +103,12 @@
     const E = window.AeroPreview && AeroPreview.elev, f = st.f;
     if (!E || !f) return;
     const P = (f.points || []).filter((x) => isFinite(x.lat) && isFinite(x.lon));
+    // Long routes: load the centerline only, so the tiles near the departure are not pushed out of memory (Nov 9)
+    let tot = 0; for (let i = 1; i < P.length; i++) tot += dist(P[i - 1], P[i]);
+    const offs = tot > 250 ? [0] : [-3, 0, 3];
     for (let i = 1; i < P.length; i++) {
       const a = P[i - 1], b = P[i], n = Math.max(1, Math.ceil(dist(a, b) / 2)), c = brg(a, b);
-      for (let k = 0; k <= n; k++) { const m = { lat: a.lat + ((b.lat - a.lat) * k) / n, lon: a.lon + ((b.lon - a.lon) * k) / n }; for (const off of [-3, 0, 3]) { const q = off ? fwd(m, (c + 90) % 360, off) : m; E(q.lat, q.lon); } }
+      for (let k = 0; k <= n; k++) { const m = { lat: a.lat + ((b.lat - a.lat) * k) / n, lon: a.lon + ((b.lon - a.lon) * k) / n }; for (const off of offs) { const q = off ? fwd(m, (c + 90) % 360, off) : m; E(q.lat, q.lon); } }
     }
   }
   const st = { watch: null, lock: null, pos: null, ni: 1, t0: null, last: null, near: null, nearAt: 0, el: null, f: null };

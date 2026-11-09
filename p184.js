@@ -91,7 +91,15 @@
     const j = await r.json(); if (j.error) throw new Error("FAA airspace query failed");
     return j.features || [];
   }
-  const ftOf = (val, uom, code, fallback) => { let v = +val; if (val == null || val === "" || !isFinite(v)) return fallback; if (/FL/i.test(uom || "")) v *= 100; if (/SFC|AGL|HEI/i.test(code || "")) v += 1000; return v; };
+  // Limits given above ground level use the terrain height under the area (Nov 9; it was a flat 1,000 ft, which put
+  // an "AGL" ceiling far too low over high country). A surface floor is 0.
+  const isAgl = (val, code) => /SFC|AGL|HEI/i.test(code || "") && +val > 0;
+  const ftOf = (val, uom, code, fallback, gnd) => { let v = +val; if (val == null || val === "" || !isFinite(v)) return fallback; if (/FL/i.test(uom || "")) v *= 100; if (isAgl(val, code)) v += gnd == null ? 1000 : gnd; return v; };
+  async function groundFt(lat, lon) {
+    const E = window.AeroPreview && AeroPreview.elev; if (!E) return null;
+    for (let i = 0; i < 16; i++) { const m = E(lat, lon); if (m != null) return Math.max(0, m * 3.28084); await new Promise((r) => setTimeout(r, 150)); }
+    return null;
+  }
   function cruiseAlt(f) { let a = 0; try { a = window.AeroWinds ? Number(AeroWinds.altOf(f)) || 0 : 0; } catch (e) {} return a || Number(String(f.cruiseAlt || "").replace(/\D/g, "")) || 5500; }
 
   function token(ll) {
@@ -109,10 +117,17 @@
     const alt = cruiseAlt(f);
     const F = frame((a + c) / 2);
     const obs = [], skipped = new Set();
-    for (const ft of feats) {
+    const ring0 = (ft) => { const g = ft.geometry || {}; return (g.type === "Polygon" ? g.coordinates[0] : g.type === "MultiPolygon" ? (g.coordinates[0] || [])[0] : null) || []; };
+    const want = feats.filter((ft) => res.some((re) => re.test(String((ft.properties || {}).TYPE_CODE || "").toUpperCase())));
+    const gnd = new Map();
+    await Promise.all(want.map(async (ft) => {
+      const pr = ft.properties || {}; if (!isAgl(pr.LOWER_VAL, pr.LOWER_CODE) && !isAgl(pr.UPPER_VAL, pr.UPPER_CODE)) return;
+      const r = ring0(ft); if (!r.length) return; let la = 0, lo = 0; for (const q of r) { lo += q[0]; la += q[1]; }
+      gnd.set(ft, await groundFt(la / r.length, lo / r.length));
+    }));
+    for (const ft of want) {
       const pr = ft.properties || {}, type = String(pr.TYPE_CODE || "").toUpperCase();
-      if (!res.some((re) => re.test(type))) continue;
-      const lo = ftOf(pr.LOWER_VAL, pr.LOWER_UOM, pr.LOWER_CODE, 0), hi = ftOf(pr.UPPER_VAL, pr.UPPER_UOM, pr.UPPER_CODE, 99999);
+      const lo = ftOf(pr.LOWER_VAL, pr.LOWER_UOM, pr.LOWER_CODE, 0, gnd.get(ft)), hi = ftOf(pr.UPPER_VAL, pr.UPPER_UOM, pr.UPPER_CODE, 99999, gnd.get(ft));
       if (!(alt >= lo - 500 && alt <= hi + 500)) continue;
       const g = ft.geometry || {}; const polys = g.type === "Polygon" ? [g.coordinates] : g.type === "MultiPolygon" ? g.coordinates : [];
       for (const pl of polys) {

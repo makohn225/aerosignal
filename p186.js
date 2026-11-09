@@ -77,8 +77,8 @@
           if (r.kind === "airport" && /\b(NAS|NAF|NOLF|OLF|AFB|AAF|AHP|MCAS|MCAF|JRB|ANGB|Naval|Army|Air Force|Air Base|Marine Corps)\b/i.test(r.name || "")) continue;
           const q = { lat: +r.lat, lon: +r.lon }, xt = xtrack(a, b, q);
           if (xt.x > 5 || Math.abs(xt.along - want) > step * 0.45 || xt.along < 4 || xt.along > xt.len - 4) continue;
-          const pub = r.kind === "airport" && /^K[A-Z0-9]{3}$/.test(r.ident);
-          const score = xt.x + (r.kind === "airport" ? (pub ? 0 : 2) : 1.5) + Math.abs(xt.along - want) * 0.08;
+          const isK = r.kind === "airport" && /^K[A-Z0-9]{3}$/.test(r.ident);
+          const score = xt.x + (r.kind === "airport" ? (isK ? 0 : 2) : 1.5) + Math.abs(xt.along - want) * 0.08;
           if (score < bestScore) { bestScore = score; best = { ident: r.ident, name: r.name, kind: r.kind === "airport" ? "airport" : "navaid", lat: +r.lat, lon: +r.lon, elev: null }; }
         }
         if (best) { out.push(best); used.add(best.ident); added++; }
@@ -139,7 +139,7 @@
       const nm = p.name && p.name !== p.ident && p.name !== "User waypoint" ? p.name : p.kind === "user" ? "Coordinate waypoint" : "";
       return `<tr><td class="n">${i + 1}</td><td><b>${h(p.ident)}</b>${nm ? `<small>${h(nm)}</small>` : ""}</td><td class="n">${leg}</td><td class="n">${i ? `${d.toFixed(1)}` : ""}</td><td class="n">${i ? Math.round(cum) : ""}</td></tr>`;
     }).join("");
-    const time = kt ? ` · about ${Math.floor(cum / kt)}:${String(Math.round((cum / kt % 1) * 60)).padStart(2, "0")} at ${kt} kt, no wind` : "";
+    const time = kt ? ` · about ${Math.floor(Math.round((cum / kt) * 60) / 60)}:${String(Math.round((cum / kt) * 60) % 60).padStart(2, "0")} at ${kt} kt, no wind` : "";
     return `<p style="margin:0 0 6px"><b>${P.length} points, ${Math.round(cum)} nm</b><span class="small muted">${time}</span></p>
       <table><tr><th class="n">#</th><th>Point</th><th class="n">Course</th><th class="n">Leg nm</th><th class="n">Total</th></tr>${rows}</table>
       <p class="small muted" style="margin:6px 0 0">Courses are magnetic, without wind. The brief's nav log adds wind, headings, times and fuel. To change the route, use Edit route on the map.</p>`;

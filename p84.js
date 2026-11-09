@@ -1,7 +1,7 @@
 "use strict";
 /* p84: diversion airports along the route. Uses the divert edge function (public airport and runway
    data) to list airports with a usable runway (paved and at least 3,000 ft by default, both set by the
-   pilot) within 25 nm of the route, ordered by where they fall along it, and finds the stretches where
+   pilot) within 25 nm of the route (public use only, with fuel, from FAA airport data when available: p192, Nov 9), ordered by where they fall along it, and finds the stretches where
    the nearest one is more than a pilot set distance away (10 nm by default, roughly a light single's
    glide from a few thousand feet). It answers "where do I go if the engine or the weather turns" before
    the flight, the way an EFB's Nearest page does in the air. */
@@ -67,10 +67,23 @@
     if (!cache.has(url)) cache.set(url, fnGet(url).catch((e) => ({ error: String((e && e.message) || e) })));
     const d = await cache.get(url);
     if (!d || d.error) { cache.delete(url); return { error: (d && d.error) || "no data" }; }
+    // FAA airport data (p192, Nov 9): keep public use airports only and show the fuel each one sells
+    let airports = d.airports || [];
+    if (window.AeroFAA && airports.length) {
+      try {
+        let a = 90, b = 180, c = -90, e = -180; for (const x of pts) { a = Math.min(a, x.lat); b = Math.min(b, x.lon); c = Math.max(c, x.lat); e = Math.max(e, x.lon); }
+        const pad = (p.r || 25) / 60 + 0.1;
+        const rows = await AeroFAA.box(a - pad, b - pad * 1.3, c + pad, e + pad * 1.3, true);
+        if (rows.length) {
+          const fm = new Map(); for (const r of rows) { fm.set(r.ident, r); if (/^K[A-Z0-9]{3}$/.test(r.ident)) fm.set(r.ident.slice(1), r); else fm.set("K" + r.ident, r); }
+          airports = airports.filter((x) => fm.has(x.ident)).map((x) => ({ ...x, fuel: fm.get(x.ident).fuel_types || null }));
+        }
+      } catch (err) {}
+    }
     const dep = String(pts[0].ident || "").toUpperCase(), dst = String(pts[pts.length - 1].ident || "").toUpperCase();
-    const aps = (d.airports || []).filter((a) => a.ident !== dep && a.ident !== dst && "K" + a.ident !== dep && "K" + a.ident !== dst);
+    const aps = airports.filter((a) => a.ident !== dep && a.ident !== dst && "K" + a.ident !== dep && "K" + a.ident !== dst);
     const S2 = samples(pts);
-    const all = d.airports || [];
+    const all = airports;
     const g = gaps(S2, all, p.gap);
     // Closest airport in each 15 nm stretch of the route, for a short list
     const by = new Map();
@@ -83,7 +96,7 @@
     if (!r) { sec.innerHTML = `<h2>Diversion airports</h2><p class="small muted" style="margin:0">Finding airports along your route…</p>`; return; }
     if (r.error) { sec.innerHTML = `<h2>Diversion airports</h2><p class="small muted" style="margin:0">Could not look up airports along the route right now. Try again in a few minutes.</p>`; return; }
     const p = r.p;
-    const rows = (showAll ? r.aps : r.short).map((a) => `<tr><td>${fmt(a.along)}</td><td><b>${h(a.ident)}</b></td><td>${h(a.name)}</td><td>${a.off < 1 ? "on route" : Math.ceil(a.off)}</td><td>${fmt(a.longest)}</td><td>${a.lit ? "Yes" : "<span class='muted'>No</span>"}</td><td>${fmt(a.elev_ft || 0)}</td></tr>`).join("");
+    const rows = (showAll ? r.aps : r.short).map((a) => `<tr><td>${fmt(a.along)}</td><td><b>${h(a.ident)}</b></td><td>${h(a.name)}</td><td>${a.off < 1 ? "on route" : Math.ceil(a.off)}</td><td>${fmt(a.longest)}</td><td>${a.lit ? "Yes" : "<span class='muted'>No</span>"}</td><td>${a.fuel ? h(window.AeroFAA ? AeroFAA.fuelText(a.fuel) : a.fuel) : (a.fuel === null ? "<span class='muted'>None</span>" : "<span class='muted'>?</span>")}</td><td>${fmt(a.elev_ft || 0)}</td></tr>`).join("");
     const worst = r.gaps.reduce((m, g) => Math.max(m, g.to - g.from), 0);
     const gapTxt = r.gaps.length
       ? `<div class="dv-gap"><b>${r.gaps.length === 1 ? "One stretch" : `${r.gaps.length} stretches`}</b> where the nearest ${p.paved ? "paved " : ""}runway of ${fmt(p.min)} ft or more is over ${p.gap} nm away: ${r.gaps.map((g) => `nm ${fmt(g.from)} to ${fmt(g.to)} (up to ${Math.ceil(g.worst)} nm away)`).join("; ")}. Plan a higher altitude, a route closer to airports, or a lower limit for these parts.</div>`
@@ -91,7 +104,7 @@
     sec.innerHTML = `<h2>Diversion airports</h2>
       <p class="dv-sum">${r.aps.length ? `${r.aps.length} airport${r.aps.length === 1 ? "" : "s"} with a ${p.paved ? "paved " : ""}runway of ${fmt(p.min)} ft or more within ${p.r} nm of your ${fmt(Math.ceil(r.total))} nm route.` : `No airports with a ${p.paved ? "paved " : ""}runway of ${fmt(p.min)} ft or more within ${p.r} nm of the route.`}</p>
       ${gapTxt}
-      ${rows ? `<div class="dv-tw"><table><thead><tr><th>Route nm</th><th>Airport</th><th>Name</th><th>Off route</th><th>Longest ft</th><th>Lit</th><th>Elev ft</th></tr></thead><tbody>${rows}</tbody></table></div>
+      ${rows ? `<div class="dv-tw"><table><thead><tr><th>Route nm</th><th>Airport</th><th>Name</th><th>Off route</th><th>Longest ft</th><th>Lit</th><th>Fuel</th><th>Elev ft</th></tr></thead><tbody>${rows}</tbody></table></div>
       ${r.aps.length > r.short.length ? `<button type="button" class="btn sec sm" data-all="1" style="margin-top:8px">${showAll ? "Show the closest in each 15 nm" : `Show all ${r.aps.length}`}</button>` : ""}` : ""}
       <div class="dv-set">
         <label>Shortest runway (ft) <input type="number" min="0" max="15000" step="100" data-k="min" value="${p.min}"></label>

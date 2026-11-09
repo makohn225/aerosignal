@@ -4,11 +4,11 @@
    what was added since their last visit (returning pilots only; titles only on phones), each with a link that opens it. It shows again only when something
    new is added, and Hide puts it away. It is also reachable at any time from More. Saved on this device only. */
 (function () {
-  const VER = "2026-11-08c", KEY = "vg_whatsnew";
+  const VER = "2026-11-09a", KEY = "vg_whatsnew";
   const ITEMS = [
     ["#/preview", "Preview in 3D", "Fly your route over 3D terrain before you go, with towers, current cloud bases, training route altitude blocks and day or night lighting."],
     ["#/fly", "Terrain ahead on the Fly screen", "The Fly screen warns when the ground or a tall obstacle in the next 5 nm comes within 1,000 ft of your GPS altitude."],
-    ["#/brief", "Fuel stops and fuel at airports", "From FAA airport data: the brief suggests public fuel stops when the trip is longer than your range, and airport pages list fuel, attended hours and tower."],
+    ["#/brief", "Fuel stops and fuel at airports", "From FAA airport data: the brief suggests public fuel stops when the trip is longer than your range, checks your destination's attended hours at your arrival time, and lists only public use diversion airports, with fuel."],
     ["#/more", "Replies to your feedback", "Feedback you send now shows its status and a reply under More, Your feedback."],
     ["#/maps", "Route list and VFR checkpoints", "Maps has a Route tab that lists every point with course and distance, and adds checkpoints about every 20 nm."],
     ["#/flights", "Avoid special use airspace", "Reroute around restricted areas, warning areas and MOAs at your altitude, with Undo."],

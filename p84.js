@@ -89,7 +89,7 @@
     const by = new Map();
     for (const a of aps) { const k = Math.floor(a.along / 15); const c = by.get(k); if (!c || a.off < c.off) by.set(k, a); }
     const short = [...by.values()].sort((x, y) => x.along - y.along);
-    return { p, total: d.total_nm, aps, short, gaps: g };
+    return { p, total: d.total_nm, aps, short, gaps: g, faa: airports !== d.airports };
   }
 
   function paint(sec, r, showAll) {
@@ -102,7 +102,7 @@
       ? `<div class="dv-gap"><b>${r.gaps.length === 1 ? "One stretch" : `${r.gaps.length} stretches`}</b> where the nearest ${p.paved ? "paved " : ""}runway of ${fmt(p.min)} ft or more is over ${p.gap} nm away: ${r.gaps.map((g) => `nm ${fmt(g.from)} to ${fmt(g.to)} (up to ${Math.ceil(g.worst)} nm away)`).join("; ")}. Plan a higher altitude, a route closer to airports, or a lower limit for these parts.</div>`
       : `<p class="small" style="margin:6px 0">A suitable runway is within ${p.gap} nm of the whole route.</p>`;
     sec.innerHTML = `<h2>Diversion airports</h2>
-      <p class="dv-sum">${r.aps.length ? `${r.aps.length} airport${r.aps.length === 1 ? "" : "s"} with a ${p.paved ? "paved " : ""}runway of ${fmt(p.min)} ft or more within ${p.r} nm of your ${fmt(Math.ceil(r.total))} nm route.` : `No airports with a ${p.paved ? "paved " : ""}runway of ${fmt(p.min)} ft or more within ${p.r} nm of the route.`}</p>
+      <p class="dv-sum">${r.aps.length ? `${r.aps.length}${r.faa ? " public use" : ""} airport${r.aps.length === 1 ? "" : "s"} with a ${p.paved ? "paved " : ""}runway of ${fmt(p.min)} ft or more within ${p.r} nm of your ${fmt(Math.ceil(r.total))} nm route.` : `No airports with a ${p.paved ? "paved " : ""}runway of ${fmt(p.min)} ft or more within ${p.r} nm of the route.`}</p>
       ${gapTxt}
       ${rows ? `<div class="dv-tw"><table><thead><tr><th>Route nm</th><th>Airport</th><th>Name</th><th>Off route</th><th>Longest ft</th><th>Lit</th><th>Fuel</th><th>Elev ft</th></tr></thead><tbody>${rows}</tbody></table></div>
       ${r.aps.length > r.short.length ? `<button type="button" class="btn sec sm" data-all="1" style="margin-top:8px">${showAll ? "Show the closest in each 15 nm" : `Show all ${r.aps.length}`}</button>` : ""}` : ""}

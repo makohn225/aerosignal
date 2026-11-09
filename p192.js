@@ -8,6 +8,7 @@
       that sell the chosen fuel are suggested as stops, each about as far along as the fuel allows, with Add stop.
    2b. (Nov 8 evening) The same panel checks the arrival: estimated arrival time against the destination's attended
       hours, private use, no fuel listed, and night arrivals where lighting is by remark.
+      Times use each airport's own time zone (from its state and position).
    3. AeroFAA.publicSet(box) gives other modules the public use airports in an area (VFR checkpoints and the Fly
       screen's nearest airports use it to leave out private fields). */
 (function () {
@@ -151,20 +152,55 @@
     if (!parsed) return "unknown";
     return unknown ? "unknown" : "closed";
   }
+  // US airport time zones from the FAA state code and position (split states by longitude), Nov 8 night
+  const TZ = { AL: "America/Chicago", AR: "America/Chicago", AZ: "America/Phoenix", CA: "America/Los_Angeles", CO: "America/Denver", CT: "America/New_York", DC: "America/New_York", DE: "America/New_York", GA: "America/New_York", HI: "Pacific/Honolulu", IA: "America/Chicago", IL: "America/Chicago", LA: "America/Chicago", MA: "America/New_York", MD: "America/New_York", ME: "America/New_York", MN: "America/Chicago", MO: "America/Chicago", MS: "America/Chicago", MT: "America/Denver", NC: "America/New_York", NH: "America/New_York", NJ: "America/New_York", NM: "America/Denver", NV: "America/Los_Angeles", NY: "America/New_York", OH: "America/New_York", OK: "America/Chicago", PA: "America/New_York", RI: "America/New_York", SC: "America/New_York", UT: "America/Denver", VA: "America/New_York", VT: "America/New_York", WA: "America/Los_Angeles", WI: "America/Chicago", WV: "America/New_York", WY: "America/Denver", PR: "America/Puerto_Rico", VI: "America/St_Thomas", GU: "Pacific/Guam", AS: "Pacific/Pago_Pago", MP: "Pacific/Saipan" };
+  function tzFor(st, lat, lon) {
+    switch (st) {
+      case "FL": return lon < -85.0 ? "America/Chicago" : "America/New_York";
+      case "TN": return lon < -85.3 ? "America/Chicago" : "America/New_York";
+      case "KY": return lon < -85.9 ? "America/Chicago" : "America/New_York";
+      case "IN": return lon < -86.9 && (lat > 41.0 || lat < 38.6) ? "America/Chicago" : "America/Indiana/Indianapolis";
+      case "MI": return lon < -87.6 && lat > 45.5 ? "America/Chicago" : "America/Detroit";
+      case "ND": return lon < -101.3 && lat < 47.2 ? "America/Denver" : "America/Chicago";
+      case "SD": return lon < -100.5 ? "America/Denver" : "America/Chicago";
+      case "NE": return lon < -101.0 ? "America/Denver" : "America/Chicago";
+      case "KS": return lon < -101.5 ? "America/Denver" : "America/Chicago";
+      case "TX": return lon < -104.9 ? "America/Denver" : "America/Chicago";
+      case "ID": return lat > 45.5 ? "America/Los_Angeles" : "America/Boise";
+      case "OR": return lon > -117.7 && lat < 44.5 ? "America/Boise" : "America/Los_Angeles";
+      case "AK": return lon < -169 ? "America/Adak" : "America/Anchorage";
+      default: return TZ[st] || null;
+    }
+  }
+  function offsetMin(ms, tz) {
+    const p = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: tz, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).formatToParts(new Date(ms)).map((x) => [x.type, x.value]));
+    return (Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour % 24, +p.minute) - Math.floor(ms / 60000) * 60000) / 60000;
+  }
+  function instantAt(date, time, tz) {
+    const [y, mo, d] = date.split("-").map(Number), [hh, mm] = time.split(":").map(Number), guess = Date.UTC(y, mo - 1, d, hh, mm);
+    if (!tz) return new Date(`${date}T${time}`).getTime();
+    let t = guess - offsetMin(guess, tz) * 60000; t = guess - offsetMin(t, tz) * 60000; return t;
+  }
+  function clockAt(ms, tz) { if (!tz) return new Date(ms); const o = offsetMin(ms, tz); const u = new Date(ms + o * 60000); return new Date(u.getUTCFullYear(), u.getUTCMonth(), u.getUTCDate(), u.getUTCHours(), u.getUTCMinutes()); }
+  const tzName = (ms, tz) => { try { return new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "short" }).formatToParts(new Date(ms)).find((x) => x.type === "timeZoneName").value; } catch (e) { return ""; } };
   async function arrival(f) {
     const P = (f.points || []).filter((p) => isFinite(p.lat) && isFinite(p.lon)); if (P.length < 2) return null;
     const dest = P[P.length - 1]; if (dest.kind && dest.kind !== "airport") return null;
     let a = null; try { [a] = (await rpc("faa_airport", { code: dest.ident })) || []; } catch (e) {}
     if (!a) return null;
-    let eta = null;
-    const dep = f.date && f.time ? new Date(`${f.date}T${f.time}`) : null;
-    if (dep && !isNaN(dep)) { let tot = 0; for (let i = 1; i < P.length; i++) tot += dist(P[i - 1], P[i]); const tas = inputs(f).tas || 110; eta = new Date(dep.getTime() + (tot / tas) * 36e5 + 10 * 60000); }
-    let sunUp = null; try { if (eta && window.AeroLogTrack && AeroLogTrack.sunEl) sunUp = AeroLogTrack.sunEl(eta.getTime(), dest.lat, dest.lon) > -0.8; } catch (e) {}
+    // Departure time is local at the departure airport; attended hours are local at the destination
+    let eta = null, etaMs = null, tzD = tzFor(a.state, a.lat, a.lon), zone = "";
+    if (f.date && f.time) {
+      let tz0 = null; try { const [a0] = (await rpc("faa_airport", { code: P[0].ident })) || []; if (a0) tz0 = tzFor(a0.state, a0.lat, a0.lon); } catch (e) {}
+      const depMs = instantAt(f.date, f.time, tz0);
+      if (isFinite(depMs)) { let tot = 0; for (let i = 1; i < P.length; i++) tot += dist(P[i - 1], P[i]); const tas = inputs(f).tas || 110; etaMs = depMs + (tot / tas) * 36e5 + 10 * 60000; eta = clockAt(etaMs, tzD); zone = tzD ? tzName(etaMs, tzD) : ""; }
+    }
+    let sunUp = null; try { if (etaMs && window.AeroLogTrack && AeroLogTrack.sunEl) sunUp = AeroLogTrack.sunEl(etaMs, dest.lat, dest.lon) > -0.8; } catch (e) {}
     const att = eta ? attendedAt(a.attendance, eta, sunUp) : "unknown";
     const notes = [];
     if (a.facility_use === "PR") notes.push({ bad: true, t: `${a.ident} is a private use airport: get permission before you land.` });
     if (eta) {
-      const when = eta.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+      const when = eta.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) + (zone ? ` ${zone}` : "") + " local";
       if (att === "closed") notes.push({ bad: true, t: `You arrive about ${when}, outside ${a.ident}'s attended hours (${attText(a.attendance)}). Fuel and services may not be available; check self serve fuel and call ahead.` });
       else if (att === "unattended") notes.push({ bad: false, t: `${a.ident} is unattended. ${a.fuel_types ? "Fuel listed: " + fuelText(a.fuel_types) + ", likely self serve." : "No fuel listed."}` });
       else if (att === "attended") notes.push({ bad: false, t: `You arrive about ${when}, within ${a.ident}'s attended hours.` });

@@ -105,13 +105,26 @@
       for (let i = 1; i < P.length; i++) { const g = along(P[i - 1], P[i], r); if (g.t < -2 || g.t > g.L + 2) continue; if (!best || g.x < best.x) best = { x: g.x, s: cum[i - 1] + Math.max(0, Math.min(g.L, g.t)) }; }
       if (best && best.x <= 15) cands.push({ ...r, s: best.s, x: best.x });
     }
-    const stops = []; let pos = 0, guard = 0;
-    while (total - pos > range && guard++ < 12) {
-      const reach = cands.filter((c) => c.s > pos + 5 && c.s - pos + c.x <= range).sort((p, q) => q.s - p.s || p.x - q.x);
-      const pick = reach[0]; if (!pick) { stops.push({ none: true, from: pos }); break; }
-      stops.push(pick); pos = pick.s;
+    // Airports already on the route that sell this fuel count as fuel stops (Nov 9): each leg between them starts
+    // with the start fuel again, so a stop that was added is not suggested a second time.
+    const byId = new Map(); for (const r of rows) { byId.set(r.ident, r); if (/^K[A-Z0-9]{3}$/.test(r.ident)) byId.set(r.ident.slice(1), r); else if (/^[A-Z0-9]{3}$/.test(r.ident)) byId.set("K" + r.ident, r); }
+    const marks = [0], planned = [];
+    for (let i = 1; i < P.length - 1; i++) {
+      const r = byId.get(String(P[i].ident || "").toUpperCase());
+      if (r && (!P[i].kind || P[i].kind === "airport") && r.fuel_types && want.test(r.fuel_types.split(",").map((x) => x.trim()).join(" ")) && dist(P[i], r) < 3) { marks.push(cum[i]); planned.push({ ident: P[i].ident, s: cum[i] }); }
     }
-    return { ...base, stops, msg: null };
+    marks.push(total);
+    const stops = []; let longest = 0;
+    for (let k = 1; k < marks.length; k++) {
+      let pos = marks[k - 1], guard = 0; const end = marks[k];
+      longest = Math.max(longest, end - pos);
+      while (end - pos > range && guard++ < 12) {
+        const reach = cands.filter((c) => c.s > pos + 5 && c.s < end - 5 && c.s - pos + c.x <= range).sort((p, q) => q.s - p.s || p.x - q.x);
+        const pick = reach[0]; if (!pick) { stops.push({ none: true, from: pos }); break; }
+        stops.push(pick); pos = pick.s;
+      }
+    }
+    return { ...base, stops, planned, longest, msg: null };
   }
   function addStop(f, st) {
     const P = (f.points || []).slice();
@@ -156,15 +169,16 @@
   const TZ = { AL: "America/Chicago", AR: "America/Chicago", AZ: "America/Phoenix", CA: "America/Los_Angeles", CO: "America/Denver", CT: "America/New_York", DC: "America/New_York", DE: "America/New_York", GA: "America/New_York", HI: "Pacific/Honolulu", IA: "America/Chicago", IL: "America/Chicago", LA: "America/Chicago", MA: "America/New_York", MD: "America/New_York", ME: "America/New_York", MN: "America/Chicago", MO: "America/Chicago", MS: "America/Chicago", MT: "America/Denver", NC: "America/New_York", NH: "America/New_York", NJ: "America/New_York", NM: "America/Denver", NV: "America/Los_Angeles", NY: "America/New_York", OH: "America/New_York", OK: "America/Chicago", PA: "America/New_York", RI: "America/New_York", SC: "America/New_York", UT: "America/Denver", VA: "America/New_York", VT: "America/New_York", WA: "America/Los_Angeles", WI: "America/Chicago", WV: "America/New_York", WY: "America/Denver", PR: "America/Puerto_Rico", VI: "America/St_Thomas", GU: "Pacific/Guam", AS: "Pacific/Pago_Pago", MP: "Pacific/Saipan" };
   function tzFor(st, lat, lon) {
     switch (st) {
-      case "FL": return lon < -85.0 ? "America/Chicago" : "America/New_York";
-      case "TN": return lon < -85.3 ? "America/Chicago" : "America/New_York";
-      case "KY": return lon < -85.9 ? "America/Chicago" : "America/New_York";
-      case "IN": return lon < -86.9 && (lat > 41.0 || lat < 38.6) ? "America/Chicago" : "America/Indiana/Indianapolis";
-      case "MI": return lon < -87.6 && lat > 45.5 ? "America/Chicago" : "America/Detroit";
-      case "ND": return lon < -101.3 && lat < 47.2 ? "America/Denver" : "America/Chicago";
+      // Lines follow the county lines closely enough for airports (reviewed Nov 9)
+      case "FL": return lon < -85.0 && !(lat < 29.95 && lon > -85.45) ? "America/Chicago" : "America/New_York";
+      case "TN": return lon < (lat > 35.75 ? -84.85 : lat > 35.25 ? -85.1 : -85.45) ? "America/Chicago" : "America/New_York";
+      case "KY": return lon < (lat > 37.6 ? -86.25 : lat > 37.4 ? -86.0 : lat > 37.2 ? -85.45 : -84.98) ? "America/Chicago" : "America/New_York";
+      case "IN": return (lat > 41.17 && lon < -86.47) || (lat > 40.73 && lon < -86.93) || (lat < 38.2 && lon < -86.5) || (lat < 38.53 && lon < -87.46) ? "America/Chicago" : "America/Indiana/Indianapolis";
+      case "MI": return (lon < -87.6 && lat < 46.25) || (lon < -89.3 && lat < 46.6) ? "America/Chicago" : "America/Detroit";
+      case "ND": return (lon < -101.3 && lat < 47.2) || (lon < -102.2 && lat < 47.6) ? "America/Denver" : "America/Chicago";
       case "SD": return lon < -100.5 ? "America/Denver" : "America/Chicago";
       case "NE": return lon < -101.0 ? "America/Denver" : "America/Chicago";
-      case "KS": return lon < -101.5 ? "America/Denver" : "America/Chicago";
+      case "KS": return lon < -101.48 && lat > 37.74 && lat < 39.57 ? "America/Denver" : "America/Chicago";
       case "TX": return lon < -104.9 ? "America/Denver" : "America/Chicago";
       case "ID": return lat > 45.5 ? "America/Los_Angeles" : "America/Boise";
       case "OR": return lon > -117.7 && lat < 44.5 ? "America/Boise" : "America/Los_Angeles";
@@ -183,7 +197,7 @@
   }
   function clockAt(ms, tz) { if (!tz) return new Date(ms); const o = offsetMin(ms, tz); const u = new Date(ms + o * 60000); return new Date(u.getUTCFullYear(), u.getUTCMonth(), u.getUTCDate(), u.getUTCHours(), u.getUTCMinutes()); }
   const tzName = (ms, tz) => { try { return new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "short" }).formatToParts(new Date(ms)).find((x) => x.type === "timeZoneName").value; } catch (e) { return ""; } };
-  async function arrival(f) {
+  async function arrival(f, nStops) {
     const P = (f.points || []).filter((p) => isFinite(p.lat) && isFinite(p.lon)); if (P.length < 2) return null;
     const dest = P[P.length - 1]; if (dest.kind && dest.kind !== "airport") return null;
     let a = null; try { [a] = (await rpc("faa_airport", { code: dest.ident })) || []; } catch (e) {}
@@ -193,14 +207,14 @@
     if (f.date && f.time) {
       let tz0 = null; try { const [a0] = (await rpc("faa_airport", { code: P[0].ident })) || []; if (a0) tz0 = tzFor(a0.state, a0.lat, a0.lon); } catch (e) {}
       const depMs = instantAt(f.date, f.time, tz0);
-      if (isFinite(depMs)) { let tot = 0; for (let i = 1; i < P.length; i++) tot += dist(P[i - 1], P[i]); const tas = inputs(f).tas || 110; etaMs = depMs + (tot / tas) * 36e5 + 10 * 60000; eta = clockAt(etaMs, tzD); zone = tzD ? tzName(etaMs, tzD) : ""; }
+      if (isFinite(depMs)) { let tot = 0; for (let i = 1; i < P.length; i++) tot += dist(P[i - 1], P[i]); const tas = inputs(f).tas || 110; etaMs = depMs + (tot / tas) * 36e5 + 10 * 60000 + (nStops || 0) * 30 * 60000; eta = clockAt(etaMs, tzD); zone = tzD ? tzName(etaMs, tzD) : ""; }
     }
     let sunUp = null; try { if (etaMs && window.AeroLogTrack && AeroLogTrack.sunEl) sunUp = AeroLogTrack.sunEl(etaMs, dest.lat, dest.lon) > -0.8; } catch (e) {}
     const att = eta ? attendedAt(a.attendance, eta, sunUp) : "unknown";
     const notes = [];
     if (a.facility_use === "PR") notes.push({ bad: true, t: `${a.ident} is a private use airport: get permission before you land.` });
     if (eta) {
-      const when = eta.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) + (zone ? ` ${zone}` : "") + " local";
+      const when = eta.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) + (zone ? ` ${zone}` : "") + " local" + (nStops ? ` (allowing 30 minutes at ${nStops === 1 ? "the fuel stop" : "each fuel stop"})` : "");
       if (att === "closed") notes.push({ bad: true, t: `You arrive about ${when}, outside ${a.ident}'s attended hours (${attText(a.attendance)}). Fuel and services may not be available; check self serve fuel and call ahead.` });
       else if (att === "unattended") notes.push({ bad: false, t: `${a.ident} is unattended. ${a.fuel_types ? "Fuel listed: " + fuelText(a.fuel_types) + ", likely self serve." : "No fuel listed."}` });
       else if (att === "attended") notes.push({ bad: false, t: `You arrive about ${when}, within ${a.ident}'s attended hours.` });
@@ -231,10 +245,11 @@
       const ctl = `<div class="fs-ctl"><label>Fuel <select data-fk><option value="100LL">100LL</option><option value="JET">Jet A</option><option value="MOGAS">Mogas or UL94</option></select></label><label>Reserve <select data-rm><option value="30">30 min</option><option value="45">45 min</option><option value="60">60 min</option></select></label></div>`;
       let body;
       if (r.msg) body = `<p style="margin:0">${h(r.msg)}</p>`;
+      else if (!r.stops.length && r.planned && r.planned.length) body = `<p style="margin:0"><b>No more fuel stops needed.</b> With fuel at ${h(r.planned.map((x) => x.ident).join(", "))}, the longest leg is ${Math.ceil(r.longest)} nm and your range is about ${Math.floor(r.range)} nm with no wind, keeping a ${rm} minute reserve. This assumes you refuel to your start fuel at each stop.</p>`;
       else if (!r.stops.length) body = `<p style="margin:0"><b>No fuel stop needed.</b> Range about ${Math.floor(r.range)} nm with no wind, keeping a ${rm} minute reserve; the route is ${Math.round(r.total)} nm.</p>`;
-      else body = `<p style="margin:0 0 6px"><b>Range about ${Math.floor(r.range)} nm</b> with no wind and a ${rm} minute reserve, for a ${Math.round(r.total)} nm route. Suggested stops at public airports that sell ${h(fk === "JET" ? "Jet A" : fk === "MOGAS" ? "mogas or UL94" : "100LL")}:</p>
+      else body = `<p style="margin:0 0 6px"><b>Range about ${Math.floor(r.range)} nm</b> with no wind and a ${rm} minute reserve, for a ${Math.round(r.total)} nm route${r.planned && r.planned.length ? ` (fuel already planned at ${h(r.planned.map((x) => x.ident).join(", "))})` : ""}. Suggested stops at public airports that sell ${h(fk === "JET" ? "Jet A" : fk === "MOGAS" ? "mogas or UL94" : "100LL")}:</p>
         <table>${r.stops.map((s, i) => s.none ? `<tr><td colspan="3"><b>No suitable airport within reach</b> after ${Math.round(s.from)} nm. Plan this leg yourself.</td></tr>` : `<tr><td><b>${h(s.ident)}</b><small>${h(tc(s.name))}, ${h(tc(s.city))} ${h(s.state || "")}</small></td><td>${Math.round(s.s)} nm along, ${s.x.toFixed(1)} nm off route<small>${h(fuelText(s.fuel_types))} · ${h(attText(s.attendance))}</small></td><td><button type="button" class="btn sec sm" data-add="${i}">Add stop</button></td></tr>`).join("")}</table>`;
-      let arr = null; try { arr = await arrival(f); } catch (e) {}
+      let arr = null; try { arr = await arrival(f, r && r.planned ? r.planned.length : 0); } catch (e) {}
       const arrHtml = arr && arr.notes.length ? `<div style="margin:10px 0 0"><b class="small">Arrival at ${h(arr.a.ident)}</b><ul style="margin:4px 0 0 18px">${arr.notes.map((n) => `<li${n.bad ? ' style="color:#ffb648;font-weight:600"' : ""}>${h(n.t)}</li>`).join("")}</ul></div>` : "";
       sec.innerHTML = `<h2>Fuel stops</h2>${ctl}${body}${arrHtml}<p class="small muted" style="margin:8px 0 0">Planning aid: no wind, 10% margin, from your nav log numbers and FAA airport data. Confirm fuel and hours by phone, and check your own fuel plan.</p>`;
       sec.querySelector("[data-fk]").value = fk; sec.querySelector("[data-rm]").value = String(rm);
@@ -255,5 +270,5 @@
     if (list.every((m) => m.target.closest && m.target.closest("#fsPanel, #faPanel"))) return;
     clearTimeout(t); t = setTimeout(() => { try { airportPage(); briefPanel(); } catch (e) { console.error(e); } }, 450);
   }).observe(document.getElementById("view") || document.body, { childList: true, subtree: true });
-  window.AeroFAA = { box, publicSet, plan, fuelText, attText, attendedAt, arrival };
+  window.AeroFAA = { box, publicSet, plan, fuelText, attText, attendedAt, arrival, tzFor };
 })();

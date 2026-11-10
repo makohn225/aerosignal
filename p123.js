@@ -2,7 +2,8 @@
 /* p123: an easier map.
    Satellite: a Satellite base layer (Esri World Imagery with place names and roads) on every map
    that has the chart choices, so pilots can look at fields, roads and clearings.
-   Measure, like ForeFlight: hold two fingers still on the map for a moment and a line appears
+   Measure, like ForeFlight: hold two fingers still on the map for about a second (lengthened Nov 9 from tester
+   feedback: a slow pinch to zoom kept bringing the measure line up) and a line appears
    between them with the distance and magnetic course (p124); move your fingers to adjust, lift to keep it on
    screen for a few seconds. The Tools menu also has Measure distance (tap points; each leg and the
    total) and Measure landing zone (tap the corners; each side in feet and meters, the length and
@@ -89,7 +90,8 @@
   /* Two finger hold to measure */
   function twoFinger(map) {
     const el = map.getContainer();
-    let timer = 0, start = null, active = false, g = null, keep = 0;
+    let timer = 0, start = null, active = false, g = null, keep = 0, t0 = 0, sep0 = 0;
+    const HOLD = 850, STILL = 8; // ms the fingers must rest, and how far (px) they may drift while resting
     const pt = (t) => map.containerPointToLatLng(map.mouseEventToContainerPoint(t));
     const clear = () => { if (g) { g.remove(); g = null; } };
     function draw(a, b) {
@@ -107,20 +109,25 @@
       start = [[e.touches[0].clientX, e.touches[0].clientY], [e.touches[1].clientX, e.touches[1].clientY]];
       clearTimeout(timer);
       timer = setTimeout(() => {
-        active = true;
+        active = true; t0 = Date.now(); sep0 = Math.hypot(start[0][0] - start[1][0], start[0][1] - start[1][1]);
         map.dragging.disable(); map.touchZoom.disable();
         if (navigator.vibrate) try { navigator.vibrate(15); } catch {}
         draw(pt({ clientX: start[0][0], clientY: start[0][1] }), pt({ clientX: start[1][0], clientY: start[1][1] }));
-      }, 420);
+      }, HOLD);
     }, { passive: true });
     // Window capture runs before the map's own pinch handling, so a held measure does not zoom
     window.addEventListener("touchmove", (e) => {
       if (!start) return;
       if (!active) {
         if (e.touches.length !== 2) { clearTimeout(timer); start = null; return; }
-        const moved = [0, 1].some((i) => Math.hypot(e.touches[i].clientX - start[i][0], e.touches[i].clientY - start[i][1]) > 6);
+        const moved = [0, 1].some((i) => Math.hypot(e.touches[i].clientX - start[i][0], e.touches[i].clientY - start[i][1]) > STILL);
         if (moved) { clearTimeout(timer); start = null; }
         return;
+      }
+      // A fast spread or squeeze right after the line appears was a pinch to zoom that started late: put the line away
+      if (e.touches.length === 2 && Date.now() - t0 < 350 && sep0 > 0) {
+        const sep = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+        if (Math.abs(sep - sep0) / sep0 > 0.35) { active = false; start = null; clear(); map.dragging.enable(); map.touchZoom.enable(); return; }
       }
       if (e.touches.length === 2) { e.preventDefault(); e.stopPropagation(); draw(pt(e.touches[0]), pt(e.touches[1])); }
     }, { capture: true, passive: false });
@@ -247,7 +254,7 @@
       const items = () => {
         const has = (sel) => !!map.getContainer().querySelector(sel);
         const list = [
-          ["dist", "Measure distance", "Tap points. Or hold two fingers on the map."],
+          ["dist", "Measure distance", "Tap points. Or hold two fingers still on the map for a second."],
           ["lz", "Measure landing zone", "Tap the corners for size and area"],
           null,
           has(".re-ctl button") ? ["edit", "Edit route", "Drag or add waypoints on the map"] : null,

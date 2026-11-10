@@ -4,8 +4,10 @@
    what was added since their last visit (returning pilots only; titles only on phones), each with a link that opens it. It shows again only when something
    new is added, and Hide puts it away. It is also reachable at any time from More. Saved on this device only. */
 (function () {
-  const VER = "2026-11-09a", KEY = "vg_whatsnew";
+  const VER = "2026-11-09b", KEY = "vg_whatsnew";
   const ITEMS = [
+    ["#/brief", "Accidents along your route", "The brief now lists the accidents within 10 nm of your route, with the most relevant to your flight first and a tag for why."],
+    ["#/fly", "Terrain without signal", "Save a flight for offline and the terrain along the route is saved too, so terrain ahead on the Fly screen works with no signal."],
     ["#/preview", "Preview in 3D", "Fly your route over 3D terrain before you go, with towers, current cloud bases, training route altitude blocks and day or night lighting."],
     ["#/fly", "Terrain ahead on the Fly screen", "The Fly screen warns when the ground or a tall obstacle in the next 5 nm comes within 1,000 ft of your GPS altitude."],
     ["#/brief", "Fuel stops and fuel at airports", "From FAA airport data: the brief suggests public fuel stops when the trip is longer than your range, checks your destination's attended hours at your arrival time, and lists only public use diversion airports, with fuel."],

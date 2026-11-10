@@ -137,6 +137,7 @@ Edge functions deploy to Supabase project `jcvrcckeprmpcruhxafm`.
 - Edge functions ntsbsync (NTSB weekly update files and the public GitHub mirror into ntsb_events and ntsb_narratives) and embedchain (runs the embedding backfill in steps)
 - p153 edit: third mode, Pilot (S.modeKind = pilot, same civil role as Flight School)
 - tests/calc.test.cjs: calculation tests (distance and course, wind triangle, magnetic variation, weight and balance, fuel, nav log) against independently worked answers; run with node tests/calc.test.cjs (not deployed)
+- tests/tdz-scan.cjs: scans every module for a let or const name used before its declaration in the same block (this broke Add VFR checkpoints on November 8); run with node tests/tdz-scan.cjs before pushing (needs acorn, not deployed)
 - p129 ADS-B In groundwork: GDL 90 decoder and encoder, traffic layer, Traffic simulator in the map Tools menu (AeroMapTools hook in p123); live feed only in the native app (`native/`, plugin `aero-gdl90`)
 - p139 pilot feedback Oct 28: plate viewer keeps the mouse wheel off the map (full screen map), On map from the full size viewer, georeference note and Hide route corridors (Tools menu and Plates panel, S.corrHide), airport page charts, NOTAMs, frequencies and FAA publication links, logo goes home to the Start here card, device voices say FAA as F A A
 

@@ -52,6 +52,7 @@ replaces anyone else's work.
 
 Before publishing a change to a calculation (distance, course, wind, variation, weight and balance, fuel,
 nav log), run node tests/calc.test.cjs from the repository root. Every case must pass.
+Before any push, node tests/tdz-scan.cjs (needs acorn) checks all modules for names used before they are declared; it must report 0.
 
 ## Brief panel positions
 

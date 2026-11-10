@@ -183,7 +183,11 @@
       const img = new Image(); img.crossOrigin = "anonymous";
       img.onload = () => { try { const c = document.createElement("canvas"); c.width = c.height = 256; const g = c.getContext("2d", { willReadFrequently: true }); g.drawImage(img, 0, 0); const px = g.getImageData(0, 0, 256, 256).data, e = new Int16Array(65536); for (let i = 0, j = 0; i < 65536; i++, j += 4) e[i] = Math.round(px[j] * 256 + px[j + 1] + px[j + 2] / 256 - 32768); t.data = e; } catch (e) { t.data = false; } };
       img.onerror = () => { t.data = false; setTimeout(() => tiles.delete(key), 15000); };
-      img.src = DEM.replace("{z}", z).replace("{x}", tx).replace("{y}", ty);
+      // Terrain saved for a flight (p196) is read from this device first, so terrain ahead works without signal
+      const url = DEM.replace("{z}", z).replace("{x}", tx).replace("{y}", ty);
+      const net = () => { img.src = url; };
+      if (window.caches) caches.open("aerosignal-region-v1").then((c) => c.match(url)).then((r) => (r ? r.blob().then((b) => { const o = URL.createObjectURL(b); img.addEventListener("load", () => URL.revokeObjectURL(o), { once: true }); img.src = o; }) : net())).catch(net);
+      else net();
       if (tiles.size > 220) tiles.delete(tiles.keys().next().value);
     }
     else if (t.data && tiles.keys().next().value === key && tiles.size > 150) { tiles.delete(key); tiles.set(key, t); } // keep tiles in use from being dropped first
@@ -367,5 +371,5 @@
     const fly = document.querySelector(".fly .row"); if (fly) add(fly);
     add(document.querySelector("#mtrSec"));
   }).observe(document.getElementById("view") || document.body, { childList: true, subtree: true });
-  window.AeroPreview = { track, ahead, elev, state: st };
+  window.AeroPreview = { DEM, track, ahead, elev, state: st };
 })();

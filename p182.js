@@ -240,5 +240,5 @@
     if (go && !go.querySelector('[href="#/fly"]')) go.insertAdjacentHTML("beforeend", `<a class="btn sec sm" href="#/fly">Fly this route</a>`);
   }).observe(document.getElementById("view") || document.body, { childList: true, subtree: true });
 
-  window.AeroFly = { feed, dist, brg, nextIndex, state: st };
+  window.AeroFly = { feed, dist, brg, nextIndex, prefetch, state: st };
 })();

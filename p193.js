@@ -13,7 +13,8 @@
     #sbNote{position:relative;border:1px solid var(--line2,rgba(255,255,255,.14));border-radius:14px;padding:9px 40px 9px 14px;margin:0 0 14px;background:rgba(127,127,127,.06);font-size:14px;line-height:1.5}
     #sbNote a{white-space:nowrap}
     #sbNote .sb-x{position:absolute;right:4px;top:2px;appearance:none;border:0;background:transparent;color:inherit;font-size:18px;width:36px;height:36px;cursor:pointer;opacity:.7}
-    .page:has(#sbNote) #asWelcome{display:none}`;
+    .page:has(#sbNote) #asWelcome{display:none}
+    body.vg-started #asWelcome{display:none}`;
   document.head.appendChild(css);
   const own = () => { try { return !!(S.logbook && S.logbook.flights && S.logbook.flights.length && !/^Demo /.test(S.logbook.source || "")); } catch (e) { return false; } };
   async function load() {
@@ -63,12 +64,20 @@
     n.querySelector("[data-x]").onclick = () => { try { sessionStorage.setItem("vg_sb_hide", "1"); } catch (e) {} n.remove(); };
     const h1 = page.querySelector("h1"); if (h1) h1.before(n); else page.prepend(n); // above the title: brief panels are inserted after it
   }
+  // Once a flight with a route exists, the Start here card stays on the Plan page only. It was at the top of every
+  // page (Nov 11), pushing Flights, Maps and the brief half a screen down on a phone.
+  function started() {
+    let on = false; try { on = (S.flights || []).some((f) => (f.points || []).length >= 2) && !/^#\/(plan)?$/.test(location.hash || "#/"); } catch (e) {}
+    document.body.classList.toggle("vg-started", on);
+  }
   function scan() {
+    started();
     const hash = location.hash || "#/";
     card();
     if (/^#\/brief/.test(hash)) note();
   }
   let t = 0;
   new MutationObserver(() => { clearTimeout(t); t = setTimeout(() => { try { scan(); } catch (e) { console.error(e); } }, 350); }).observe(document.getElementById("view") || document.body, { childList: true, subtree: true });
+  window.addEventListener("hashchange", started);
   window.AeroSampleBrief = { load };
 })();

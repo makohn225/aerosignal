@@ -1,11 +1,12 @@
 "use strict";
 /* p197: easier map navigation (November 10, 2026, from Mario's phone testing: moving around the map felt hard).
    On the Maps page:
-   1. Full map. A button on the map makes it fill the whole screen, over the top bar and the list, so there is
-      room to pan and zoom on a phone. The same button, or Esc, brings the page back.
+   1. Full map. The map already had a full screen control (p42), but it was a small unlabeled icon and easy to
+      miss. It is now a labeled Full map button (it drives p42's own full screen, so there is still only one
+      implementation), and the icon is hidden where the labeled button is shown.
    2. Route. A button that brings the whole route back into view after wandering off.
    3. On phones, tapping an accident in the list tucks the list down to its smallest height and centers the
-      map on that accident, so the tap shows the place and not more list.
+      map on that accident with its detail card, so the tap shows the place and not more list.
    Buttons are a normal map control under the zoom buttons, fingertip sized on touch screens. */
 (function () {
   const css = document.createElement("style");
@@ -15,9 +16,7 @@
     .mnav button svg{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
     .mnav button[aria-pressed="true"]{border-color:#3DE0FF;color:#3DE0FF}
     @media (pointer:coarse){.mnav button{height:44px;padding:0 12px;font-size:13.5px}}
-    #map.vg-full{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;height:100dvh!important;z-index:1500!important;margin:0!important;border-radius:0!important}
-    body.vg-fullmap{overflow:hidden}
-    body.vg-fullmap #fbFab,body.vg-fullmap #askFab{display:none!important}`;
+    .leaflet-container:has(.mnav) .fs-ctl{display:none!important}`;
   document.head.appendChild(css);
   const map = () => { try { return typeof leafletMap !== "undefined" && leafletMap ? leafletMap : null; } catch (e) { return null; } };
   const phone = () => matchMedia("(max-width:860px)").matches;
@@ -26,15 +25,25 @@
     back: '<svg viewBox="0 0 24 24"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>',
     route: '<svg viewBox="0 0 24 24"><circle cx="5" cy="18" r="2"/><circle cx="19" cy="6" r="2"/><path d="M7 17l10-10"/></svg>',
   };
-  function setFull(on) {
-    const m = map(), el = document.getElementById("map"); if (!m || !el) return;
-    el.classList.toggle("vg-full", on); document.body.classList.toggle("vg-fullmap", on);
-    const b = el.querySelector(".mnav [data-n='full']");
-    if (b) { b.setAttribute("aria-pressed", on ? "true" : "false"); b.innerHTML = on ? `${ICON.back}<span>Exit full map</span>` : `${ICON.full}<span>Full map</span>`; }
-    const c = m.getCenter();
-    setTimeout(() => { try { m.invalidateSize({ animate: false }); m.setView(c, m.getZoom(), { animate: false }); } catch (e) {} }, 60);
+  const isFull = () => document.body.classList.contains("map-fs");
+  // Going in or out of full map keeps the same place in the middle (p42 keeps the top left corner instead)
+  let last = null, lockUntil = 0, wasFull = false;
+  function keepCenter() {
+    const m = map(), on = isFull(); if (on === wasFull) return; wasFull = on;
+    if (!m || !last) return; const v = last; lockUntil = Date.now() + 1000;
+    setTimeout(() => { try { m.setView(v.c, v.z, { animate: false }); } catch (e) {} }, 700);
   }
-  const isFull = () => document.body.classList.contains("vg-fullmap");
+  function label() {
+    keepCenter();
+    const b = document.querySelector(".mnav [data-n='full']"); if (!b) return;
+    const on = isFull(); if (b.getAttribute("aria-pressed") === String(on) && b.dataset.l) return;
+    b.dataset.l = "1"; b.setAttribute("aria-pressed", String(on)); b.innerHTML = on ? `${ICON.back}<span>Exit full map</span>` : `${ICON.full}<span>Full map</span>`;
+  }
+  function setFull(on) {
+    const m = map(); if (!m || isFull() === !!on) return;
+    const fs = m._aeroFsBtn || (m.getContainer().querySelector(".fs-ctl a")); if (!fs) return;
+    fs.click(); setTimeout(label, 80);
+  }
   function routePts() { let f = null; try { f = currentFlight(); } catch (e) {} return ((f && f.points) || []).filter((p) => isFinite(p.lat) && isFinite(p.lon)); }
   function fitRoute() {
     const m = map(), P = routePts(); if (!m) return;
@@ -45,22 +54,22 @@
   function ensure() {
     const m = map();
     if (!/^#\/maps/.test(location.hash || "") || !m || !window.L) return;
-    if (ctl && ctlMap === m && m.getContainer().querySelector(".mnav")) return;
-    ctlMap = m;
+    if (ctl && ctlMap === m && m.getContainer().querySelector(".mnav")) { label(); return; }
+    ctlMap = m; last = { c: m.getCenter(), z: m.getZoom() }; wasFull = isFull();
+    m.on("moveend", () => { if (Date.now() > lockUntil) { try { last = { c: m.getCenter(), z: m.getZoom() }; } catch (e) {} } });
     ctl = L.control({ position: "topleft" });
     ctl.onAdd = () => {
       const d = L.DomUtil.create("div", "mnav leaflet-control");
       d.innerHTML = `<button type="button" data-n="full" aria-pressed="false" title="Make the map fill the screen">${ICON.full}<span>Full map</span></button><button type="button" data-n="route" title="Bring the whole route back into view">${ICON.route}<span>Route</span></button>`;
       L.DomEvent.disableClickPropagation(d); L.DomEvent.disableScrollPropagation(d);
-      d.querySelector("[data-n='full']").onclick = () => setFull(!isFull());
+      const fb = d.querySelector("[data-n='full']"); fb.onclick = () => setFull(!isFull());
+      if (!(m._aeroFsBtn || m.getContainer().querySelector(".fs-ctl a"))) fb.hidden = true; // no full screen support on this map
       d.querySelector("[data-n='route']").onclick = fitRoute;
       return d;
     };
     try { ctl.addTo(m); } catch (e) { ctl = null; }
   }
-  // Leaving the Maps page, or Esc, always ends full map
-  function leave() { if (isFull() && !/^#\/maps/.test(location.hash || "")) { document.body.classList.remove("vg-fullmap"); const el = document.getElementById("map"); if (el) el.classList.remove("vg-full"); } }
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && isFull()) setFull(false); });
+  new MutationObserver(label).observe(document.body, { attributes: true, attributeFilter: ["class"] });
   // 3. phones: a tap on an accident in the list shows the place
   document.addEventListener("click", (e) => {
     const it = e.target.closest && e.target.closest(".hzitem"); if (!it || !phone()) return;
@@ -69,14 +78,15 @@
     setTimeout(() => {
       try {
         m.invalidateSize({ animate: false });
-        const pop = m._popup && m._popup.isOpen && m._popup.isOpen() ? m._popup.getLatLng() : null;
-        if (pop) m.panTo(pop, { animate: true });
+        // The list tap skips the popup on phones because the list used to cover the map; with the list tucked there is room, so open it
+        const sel = document.querySelector("#map .hz.sel"), ic = sel && sel.closest(".leaflet-marker-icon");
+        if (ic) ic.click();
         const top = document.getElementById("map").getBoundingClientRect().top + scrollY - 70; if (scrollY > top) window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
       } catch (err) {}
-    }, 420);
+    }, 760);
   }, true);
   let t = 0;
-  const kick = () => { clearTimeout(t); t = setTimeout(() => { try { leave(); ensure(); } catch (e) { console.error(e); } }, 400); };
+  const kick = () => { clearTimeout(t); t = setTimeout(() => { try { ensure(); } catch (e) { console.error(e); } }, 400); };
   new MutationObserver(kick).observe(document.getElementById("view") || document.body, { childList: true, subtree: false });
   window.addEventListener("hashchange", kick);
   kick(); setInterval(() => { try { ensure(); } catch (e) {} }, 2500);

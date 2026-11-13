@@ -3,7 +3,8 @@
    logbook by kind (cross country, night, instrument, approaches, PIC, dual received, flight review or
    IPC), by time window (including the 90 day landing and 6 month instrument windows), by aircraft and
    by text (airport, route or remarks), with totals for what is shown. Tap a flight to open it on its
-   own to read, edit, print or delete it, and print the filtered list. Edits stay in S.logbook. */
+   own to read, edit, print or delete it, and print the filtered list. Edits stay in S.logbook.
+   Nov 13: flights can carry tags (edited in the flight dialog), with a tag filter and tags in the search. */
 (function () {
   const css = document.createElement("style");
   css.textContent = `
@@ -37,7 +38,9 @@
     ["all", "All"], ["xc", "Cross country"], ["night", "Night"], ["inst", "Instrument"], ["appr", "Approaches"], ["pic", "PIC"], ["dual", "Dual received"], ["rev", "Review or IPC"],
   ];
   const WINDOWS = [["all", "All time"], ["30", "Last 30 days"], ["90", "Last 90 days (landing currency)"], ["182", "Last 6 months (instrument currency)"], ["365", "Last 12 months"], ["730", "Last 24 months (flight review)"]];
-  const st = { kind: "all", win: "all", tail: "", q: "", page: 1 };
+  const st = { kind: "all", win: "all", tail: "", tag: "", q: "", page: 1 };
+  // Tags (Nov 13, from pilots asking for easier tagging): free words on a flight, e.g. checkride, mountain, training
+  const tagsOf = (f) => String(f.tags || "").split(/[,;]+/).map((t) => t.trim().toLowerCase()).filter(Boolean);
   const ldg = (f) => +f.allLdg || (+f.dayLdg || 0) + (+f.nightLdg || 0);
   const inst = (f) => (+f.act || 0) + (+f.sim || 0);
 
@@ -48,7 +51,8 @@
     return all.filter(({ f }) => {
       if (cut && String(f.date) < cut) return false;
       if (st.tail && f.tail !== st.tail) return false;
-      if (q && ![f.from, f.to, f.route, f.remarks, f.tail].join(" ").toUpperCase().includes(q)) return false;
+      if (st.tag && !tagsOf(f).includes(st.tag)) return false;
+      if (q && ![f.from, f.to, f.route, f.remarks, f.tail, f.tags].join(" ").toUpperCase().includes(q)) return false;
       switch (st.kind) {
         case "xc": return +f.xc > 0;
         case "night": return +f.night > 0 || +f.nightLdg > 0;
@@ -69,13 +73,15 @@
   function paint(sec) {
     const lb = S.logbook || { flights: [] };
     const tails = [...new Set((lb.flights || []).map((f) => f.tail).filter(Boolean))].sort();
+    const tags = [...new Set((lb.flights || []).flatMap(tagsOf))].sort();
     const rows = filtered();
     const shown = rows.slice(0, st.page * 50);
     sec.innerHTML = `<h2>Find flights</h2>
       <div class="lf-chips" role="group" aria-label="Kind of flight">${KINDS.map(([k, n]) => `<button type="button" data-kind="${k}" aria-pressed="${st.kind === k}">${n}</button>`).join("")}</div>
       <div class="lf-row"><select data-f="win" aria-label="Time window">${WINDOWS.map(([k, n]) => `<option value="${k}" ${st.win === k ? "selected" : ""}>${n}</option>`).join("")}</select>
         <select data-f="tail" aria-label="Aircraft"><option value="">All aircraft</option>${tails.map((t) => `<option ${st.tail === t ? "selected" : ""}>${h(t)}</option>`).join("")}</select>
-        <input type="search" data-f="q" placeholder="Airport, route or remarks" value="${h(st.q)}"></div>
+        ${tags.length ? `<select data-f="tag" aria-label="Tag"><option value="">All tags</option>${tags.map((t) => `<option ${st.tag === t ? "selected" : ""}>${h(t)}</option>`).join("")}</select>` : ""}
+        <input type="search" data-f="q" placeholder="Airport, route, remarks or tag" value="${h(st.q)}"></div>
       <div class="lf-tot">${totals(rows).map(([l, v]) => `<div><b>${(+v).toLocaleString("en-US")}</b><span>${l}</span></div>`).join("")}</div>
       ${rows.length ? `<div class="scroll"><table><thead><tr><th>Date</th><th>Aircraft</th><th>Route</th><th class="n">Total</th><th class="n">Night</th><th class="n">Inst</th><th class="n">Ldg</th><th class="n">Appr</th></tr></thead><tbody>
         ${shown.map(({ f, i }) => `<tr data-i="${i}" tabindex="0"><td>${h(f.date)}</td><td>${h(f.tail)}</td><td>${h([f.from, f.route, f.to].filter(Boolean).join(" "))}</td><td class="n">${r1(f.total)}</td><td class="n">${+f.night ? r1(f.night) : ""}</td><td class="n">${inst(f) ? r1(inst(f)) : ""}</td><td class="n">${ldg(f) || ""}</td><td class="n">${+f.appr || ""}</td></tr>`).join("")}</tbody></table></div>
@@ -101,6 +107,7 @@
       <div class="grid">${FIELDS.map(([k, l, t]) => `<label>${l}<input data-k="${k}" type="${t === "date" ? "date" : t === "text" ? "text" : "number"}" ${t === "num" ? 'step="0.1" min="0"' : t === "int" ? 'step="1" min="0"' : ""} value="${h(f[k] ?? "")}"></label>`).join("")}</div>
       <div class="row" style="gap:14px;margin-top:8px"><label style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" data-k="review" ${f.review ? "checked" : ""} style="width:auto"> Flight review</label><label style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" data-k="ipc" ${f.ipc ? "checked" : ""} style="width:auto"> IPC</label></div>
       <label style="margin-top:8px">Remarks<textarea data-k="remarks">${h(f.remarks || "")}</textarea></label>
+      <label style="margin-top:8px">Tags, separated by commas<input data-k="tags" value="${h(f.tags || "")}" placeholder="checkride, mountain, training"></label>
       <div class="row" style="gap:8px;margin-top:12px;flex-wrap:wrap"><button type="button" class="btn sm" data-a="save">Save</button><button type="button" class="btn sec sm" data-a="print">Print</button><button type="button" class="btn sec sm" data-a="del">Delete</button><button type="button" class="btn sec sm" data-a="close">Close</button></div></div>`;
     document.body.appendChild(d);
     const close = () => d.remove();
@@ -112,6 +119,7 @@
       for (const [k, , t] of FIELDS) { const v = d.querySelector(`[data-k="${k}"]`).value; f[k] = t === "num" ? r1(v) : t === "int" ? Math.max(0, Math.round(+v || 0)) : k === "tail" ? v.toUpperCase().trim() : v.trim(); }
       f.review = d.querySelector('[data-k="review"]').checked; f.ipc = d.querySelector('[data-k="ipc"]').checked;
       f.remarks = d.querySelector('[data-k="remarks"]').value;
+      f.tags = tagsOf({ tags: d.querySelector('[data-k="tags"]').value }).join(", ");
       S.logbook.edited = Date.now();
       save(); close(); toast("Flight saved"); paint(sec);
     };

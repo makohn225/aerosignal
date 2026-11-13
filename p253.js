@@ -15,7 +15,8 @@
    and when the aircraft is within 3 nm of it the decision is shown in full (with a vibration where the device
    supports it), so the plan made on the ground is in front of the pilot at the moment it matters.
    Terrain is from public elevation tiles (p189), airports from the diversion list (p84) and FAA data (p192),
-   fuel from the nav log figures (p192). The pilot can turn any point off. */
+   fuel from the nav log figures (p192). The pilot can turn any point off. Nov 13: the ridge and destination
+   decisions use the pilot's own minimums (p32) for day VFR, night VFR or IFR; no ridge check on IFR flights. */
 (function () {
   const R = Math.PI / 180;
   const h = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -79,12 +80,19 @@
     let alt = 0; try { alt = window.AeroVnav ? AeroVnav.cruise(f) : 0; } catch (e) {}
     const aps = await airports(f, P, total);
     const out = [];
+    // The pilot's own minimums (p32, set under Minimums): day or night VFR, or IFR, by the flight rules and the planned times
+    let M = null; try { M = window.AeroMins && AeroMins.mins ? AeroMins.mins() : null; } catch (e) {}
+    let nt = null; try { nt = window.AeroSportPilot && AeroSportPilot.night ? await AeroSportPilot.night(f) : null; } catch (e) {}
+    const ifr = String(f.rules || "").toUpperCase() === "IFR";
+    const mine = M ? (ifr ? { c: M.ifrCeil, v: M.ifrVis, l: "IFR" } : nt ? { c: M.nightCeil, v: M.nightVis, l: "night VFR" } : { c: M.vfrCeil, v: M.vfrVis, l: "day VFR" }) : null;
+    const minsTxt = mine ? `your ${mine.l} minimums (ceiling ${fmt(mine.c)} ft, visibility ${mine.v} sm${M.wind ? `, wind ${M.wind} kt` : ""})` : "your personal minimums";
     // 1. Ridge check
     const hi = await terrain(S2);
-    if (hi && total > 25 && (hi.ft >= 2500 || (alt && alt - hi.ft < 2500)) && hi.at > 12 && hi.at < total - 5) {
+    if (!ifr && hi && total > 25 && (hi.ft >= 2500 || (alt && alt - hi.ft < 2500)) && hi.at > 12 && hi.at < total - 5) {
       const at = Math.max(5, hi.at - 10);
       const behind = aps.filter((a) => a.at <= at - 2 && (a.off || 0) <= 10 && !a.dst).sort((a, b) => b.at - a.at)[0] || aps.find((a) => a.dep);
-      const base = up100(hi.ft + 1000);
+      // At least 1,000 ft above the ridge; more when the pilot's own ceiling minimum asks for more (half of it as clearance over the high ground)
+      const base = up100(hi.ft + Math.max(1000, mine ? Math.min(2000, mine.c / 2) : 1000));
       out.push({ k: "ridge", at, title: "Ridge check", short: `Continue only with cloud bases above ${fmt(base)} ft and the ridgeline in sight. Otherwise turn back to ${behind.ident}.`, text: `Highest ground on the route is about ${fmt(up100(hi.ft))} ft at ${fmt(hi.at)} nm. Before you reach it, decide: if the cloud bases ahead look lower than ${fmt(base)} ft, or you cannot see the ridgeline clearly, turn back to <b>${h(behind.ident)}</b>${behind.at != null ? `, about ${fmt(Math.max(1, at - behind.at))} nm behind you` : ""}.`, why: "Continuing visual flight into cloud over high ground is one of the deadliest accident patterns in the NTSB record." });
     }
     // 2. Fuel check
@@ -105,18 +113,19 @@
       const dst = P[P.length - 1];
       const alts = aps.filter((a) => !a.dst && !a.dep && dist(a, dst) <= 40).sort((a, b) => (b.fuel ? 1 : 0) - (a.fuel ? 1 : 0) || dist(a, dst) - dist(b, dst));
       const alt1 = alts[0];
-      out.push({ k: "wx", at, title: "Destination weather", short: `Get the ${dst.ident} weather now. Below your minimums: divert to ${alt1 ? alt1.ident : "your alternate"}.`, text: `About ${fmt(total - at)} nm out, get the ${h(dst.ident)} weather (ATIS, AWOS or ASOS). If it is below your personal minimums, do not try an approach or a scud run: divert to <b>${alt1 ? h(alt1.ident) : "your alternate"}</b>${alt1 ? `${fuelTxt(alt1)}, ${fmt(dist(alt1, dst))} nm from ${h(dst.ident)}` : ""}.`, why: "Deciding the alternate before you are tired and close to home takes the pressure off pressing on." });
+      out.push({ k: "wx", at, title: "Destination weather", short: `Get the ${dst.ident} weather now. Below ${mine ? `${fmt(mine.c)} ft or ${mine.v} sm` : "your minimums"}: divert to ${alt1 ? alt1.ident : "your alternate"}.`, text: `About ${fmt(total - at)} nm out, get the ${h(dst.ident)} weather (ATIS, AWOS or ASOS). If it is below ${minsTxt}, do not try an approach or a scud run: divert to <b>${alt1 ? h(alt1.ident) : "your alternate"}</b>${alt1 ? `${fuelTxt(alt1)}, ${fmt(dist(alt1, dst))} nm from ${h(dst.ident)}` : ""}.`, why: "Deciding the alternate before you are tired and close to home takes the pressure off pressing on." });
     }
     return out.sort((a, b) => a.at - b.at);
   }
   const real = (L) => (L || []).filter((d) => !d.hint);
-  const keyOf = (f) => { const nl = f.nl || {}; return `${pts(f).map((p) => `${p.lat.toFixed(3)},${p.lon.toFixed(3)}`).join(";")}|${f.tail || ""}|${f.alt || ""}|${nl.fuel || (f.wb || {}).fuel || ""}|${nl.gph || ""}|${nl.tas || ""}`; };
+  const keyOf = (f) => { const nl = f.nl || {}; return `${JSON.stringify(S.pmins || {})}|${f.rules || ""}|${f.date || ""}|${f.time || ""}|${pts(f).map((p) => `${p.lat.toFixed(3)},${p.lon.toFixed(3)}`).join(";")}|${f.tail || ""}|${f.alt || ""}|${nl.fuel || (f.wb || {}).fuel || ""}|${nl.gph || ""}|${nl.tas || ""}`; };
   function paint(sec, f) {
     const L = real(f.dps), off = new Set(f.dpOff || []), hint = (f.dps || []).some((d) => d.hint);
     if (!L.length) { sec.innerHTML = `<h2>Decision points</h2><p class="muted" style="margin:0">This route is short and low enough that no decision points are needed.</p>${hint ? `<p class="small" style="margin:6px 0 0">Add start fuel and fuel burn in the nav log to get a fuel check.</p>` : ""}`; return; }
     sec.innerHTML = `<h2>Decision points</h2><p style="margin:0 0 4px">Decide these now, on the ground, and follow the plan in the air. ${L.length === 1 ? "It shows" : "They show"} on the Fly screen as you get close.</p>
       <ol>${L.map((d) => `<li class="${off.has(d.k) ? "off" : ""}"><div class="dp-t">${h(d.title)} <span class="dp-w">at ${fmt(d.at)} nm</span></div><div>${d.text}</div><div class="dp-w">${h(d.why)}</div><button type="button" class="dp-x" data-k="${h(d.k)}">${off.has(d.k) ? "Turn back on" : "Turn off"}</button></li>`).join("")}</ol>
       ${hint ? `<p class="small" style="margin:8px 0 0">Add start fuel and fuel burn in the nav log to get a fuel check too.</p>` : ""}
+      <p class="small" style="margin:8px 0 0">Using ${S.pminsSetAt || (S.pmins && Object.keys(S.pmins).length) ? "your personal minimums" : "starting minimums that are only a template"}. <a href="#/minimums">${S.pminsSetAt || (S.pmins && Object.keys(S.pmins).length) ? "Change them" : "Set your own"}</a>.</p>
       <p class="small muted" style="margin:8px 0 0">Distances are along the route from the departure. Terrain from public elevation data, airports and fuel from FAA data. Planning aid only.</p>`;
     sec.querySelectorAll(".dp-x").forEach((b) => (b.onclick = () => { const s = new Set(f.dpOff || []); s.has(b.dataset.k) ? s.delete(b.dataset.k) : s.add(b.dataset.k); f.dpOff = [...s]; try { save(); } catch (e) {} paint(sec, f); }));
   }

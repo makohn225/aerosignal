@@ -4,8 +4,9 @@
    what was added since their last visit (returning pilots only; titles only on phones), each with a link that opens it. It shows again only when something
    new is added, and Hide puts it away. It is also reachable at any time from More. Saved on this device only. */
 (function () {
-  const VER = "2026-11-12a", KEY = "vg_whatsnew";
+  const VER = "2026-11-13a", KEY = "vg_whatsnew";
   const ITEMS = [
+    ["#/brief", "Decision points", "The brief places turn back, fuel and destination weather decisions on your route, and the Fly screen shows each one as you reach it."],
     ["#/more", "Sport pilot check (MOSAIC)", "Fly as a sport pilot? Turn it on under More, Your certificate, and each brief checks the flight against the MOSAIC sport pilot privileges."],
     ["#/brief", "FAA weather cameras", "The brief links to FAA weather cameras and the Aviation Weather Center forecasts, with their low altitude mode for helicopters."],
     ["#/maps", "Easier map navigation", "Full map makes the chart fill the screen, Route brings your route back into view, and tapping an accident in the list now shows it on the map."],

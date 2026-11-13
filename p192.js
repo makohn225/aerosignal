@@ -274,6 +274,10 @@
     finally { setTimeout(() => (fsBusy = false), 0); }
   }
   let t = 0;
+  // Start the request as soon as the brief opens, not when the panel finally paints (Nov 11): the answer is then
+  // waiting (shared by p250) instead of being the last thing the page waits for.
+  function warm() { try { if (!/^#\/brief(\/|$|\?)/.test(location.hash || "")) return; const f = currentFlight(); if (!f || f.missionId || (f.points || []).length < 2) return; plan(f, pref("vg_fs_fuel", "100LL"), Number(pref("vg_fs_res", "45"))).catch(() => {}); arrival(f, 0).catch(() => {}); } catch (e) {} }
+  window.addEventListener("hashchange", warm); warm();
   new MutationObserver((list) => {
     if (list.every((m) => m.target.closest && m.target.closest("#fsPanel, #faPanel"))) return;
     clearTimeout(t); t = setTimeout(() => { try { airportPage(); briefPanel(); } catch (e) { console.error(e); } }, 450);

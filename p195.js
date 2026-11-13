@@ -135,7 +135,10 @@
     if (list.every((m) => m.target.closest && m.target.closest("#rtPanel, .rt-line"))) return;
     kick();
   }).observe(document.getElementById("view") || document.body, { childList: true, subtree: true });
-  window.addEventListener("hashchange", kick);
-  kick();
+  // Start the request as soon as the brief opens, not when the panel finally paints (Nov 11): the answer is then
+  // waiting (shared by p250) instead of being the last thing the page waits for.
+  function warm() { try { if (!/^#\/brief(\/|$|\?)/.test(location.hash || "")) return; const f = currentFlight(); if (f && !f.missionId && (f.points || []).filter((p) => isFinite(p.lat) && isFinite(p.lon)).length >= 2) load(f).catch(() => {}); } catch (e) {} }
+  window.addEventListener("hashchange", () => { warm(); kick(); });
+  warm(); kick();
   window.AeroRouteAccidents = { rank, sameType };
 })();

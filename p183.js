@@ -92,7 +92,11 @@
     if (list.every((m) => m.target.closest && m.target.closest("#kiPanel"))) return;
     kick();
   }).observe(document.getElementById("view") || document.body, { childList: true, subtree: true });
-  window.addEventListener("hashchange", kick);
+  // Start the request as soon as the brief opens, not when the panel finally paints (Nov 11): the answer is then
+  // waiting (shared by p250) instead of being the last thing the page waits for.
+  function warm() { try { if (!/^#\/brief(\/|$|\?)/.test(location.hash || "")) return; const f = currentFlight(); const ac = f && !f.missionId ? aircraftOf(f) : null; if (ac) load(ac).catch(() => {}); } catch (e) {} }
+  window.addEventListener("hashchange", () => { warm(); kick(); });
+  warm();
   kick();
   window.AeroKnownIssues = { aircraftOf, JASC, TYPE };
 })();

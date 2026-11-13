@@ -131,6 +131,8 @@
     ["NOTAM Search", "https://notams.aim.faa.gov/notamSearch/"],
     ["Temporary flight restrictions", "https://tfr.faa.gov/"],
     ["Aviation Weather Center", "https://aviationweather.gov/"],
+    ["Graphical forecasts (low altitude mode for helicopters)", "https://aviationweather.gov/gfa/"],
+    ["FAA weather cameras", "https://weathercams.faa.gov/map"],
     ["14 CFR (Federal Aviation Regulations)", "https://www.ecfr.gov/current/title-14"],
   ];
   const GROUPS = [["IAP", "Approaches"], ["APD", "Airport diagram"], ["DP", "Departures"], ["STAR", "Arrivals"], ["MIN", "Minimums"], ["HOT", "Hot spots"], ["LAH", "Land and hold short"]];

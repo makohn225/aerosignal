@@ -371,5 +371,5 @@
     const fly = document.querySelector(".fly .row"); if (fly) add(fly);
     add(document.querySelector("#mtrSec"));
   }).observe(document.getElementById("view") || document.body, { childList: true, subtree: true });
-  window.AeroPreview = { DEM, track, ahead, elev, state: st };
+  window.AeroPreview = { DEM, clouds, track, ahead, elev, state: st };
 })();

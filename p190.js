@@ -4,8 +4,10 @@
    what was added since their last visit (returning pilots only; titles only on phones), each with a link that opens it. It shows again only when something
    new is added, and Hide puts it away. It is also reachable at any time from More. Saved on this device only. */
 (function () {
-  const VER = "2026-11-13b", KEY = "vg_whatsnew";
+  const VER = "2026-11-13c", KEY = "vg_whatsnew";
   const ITEMS = [
+    ["#/brief", "Route weather profile", "A side view of your route in the brief: terrain, your planned altitude, reported cloud bases, the freezing level and winds."],
+    ["#/fly", "Descent cue", "The Fly screen tells you when to start down and the descent rate needed to reach pattern altitude."],
     ["#/fly", "The Fly screen records your flight", "Fly with the Fly screen and your track is recorded for the debrief and your logbook, with no other app needed."],
     ["#/brief", "Decision points", "The brief places turn back, fuel and destination weather decisions on your route, and the Fly screen shows each one as you reach it."],
     ["#/more", "Sport pilot check (MOSAIC)", "Fly as a sport pilot? Turn it on under More, Your certificate, and each brief checks the flight against the MOSAIC sport pilot privileges."],

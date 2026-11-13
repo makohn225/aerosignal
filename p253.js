@@ -119,11 +119,20 @@
   }
   const real = (L) => (L || []).filter((d) => !d.hint);
   const keyOf = (f) => { const nl = f.nl || {}; return `${JSON.stringify(S.pmins || {})}|${f.rules || ""}|${f.date || ""}|${f.time || ""}|${pts(f).map((p) => `${p.lat.toFixed(3)},${p.lon.toFixed(3)}`).join(";")}|${f.tail || ""}|${f.alt || ""}|${nl.fuel || (f.wb || {}).fuel || ""}|${nl.gph || ""}|${nl.tas || ""}`; };
+  // After the flight: when the track (flown or imported) reached each decision point (p254, Nov 13)
+  function reached(f, d) {
+    const T = f.track && f.track.pts; if (!T || T.length < 2) return null;
+    const P = pts(f); let at = 0; const k = [];
+    for (let i = 1; i < P.length; i++) { const L2 = dist(P[i - 1], P[i]); if (d.at <= at + L2 || i === P.length - 1) { const t = L2 ? Math.max(0, Math.min(1, (d.at - at) / L2)) : 0; k.push(P[i - 1].lat + (P[i].lat - P[i - 1].lat) * t, P[i - 1].lon + (P[i].lon - P[i - 1].lon) * t); break; } at += L2; }
+    if (!k.length) return null;
+    let best = null; for (const q of T) { const x = dist({ lat: q[0], lon: q[1] }, { lat: k[0], lon: k[1] }); if (!best || x < best.x) best = { x, t: q[3] }; }
+    return best && best.x <= 5 && best.t ? best.t : best && best.x <= 5 ? -1 : 0;
+  }
   function paint(sec, f) {
     const L = real(f.dps), off = new Set(f.dpOff || []), hint = (f.dps || []).some((d) => d.hint);
     if (!L.length) { sec.innerHTML = `<h2>Decision points</h2><p class="muted" style="margin:0">This route is short and low enough that no decision points are needed.</p>${hint ? `<p class="small" style="margin:6px 0 0">Add start fuel and fuel burn in the nav log to get a fuel check.</p>` : ""}`; return; }
     sec.innerHTML = `<h2>Decision points</h2><p style="margin:0 0 4px">Decide these now, on the ground, and follow the plan in the air. ${L.length === 1 ? "It shows" : "They show"} on the Fly screen as you get close.</p>
-      <ol>${L.map((d) => `<li class="${off.has(d.k) ? "off" : ""}"><div class="dp-t">${h(d.title)} <span class="dp-w">at ${fmt(d.at)} nm</span></div><div>${d.text}</div><div class="dp-w">${h(d.why)}</div><button type="button" class="dp-x" data-k="${h(d.k)}">${off.has(d.k) ? "Turn back on" : "Turn off"}</button></li>`).join("")}</ol>
+      <ol>${L.map((d) => `<li class="${off.has(d.k) ? "off" : ""}"><div class="dp-t">${h(d.title)} <span class="dp-w">at ${fmt(d.at)} nm${(() => { const r = reached(f, d); return r == null ? "" : r > 0 ? `, reached ${new Date(r).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}` : r === -1 ? ", reached" : ", not reached on the track"; })()}</span></div><div>${d.text}</div><div class="dp-w">${h(d.why)}</div><button type="button" class="dp-x" data-k="${h(d.k)}">${off.has(d.k) ? "Turn back on" : "Turn off"}</button></li>`).join("")}</ol>
       ${hint ? `<p class="small" style="margin:8px 0 0">Add start fuel and fuel burn in the nav log to get a fuel check too.</p>` : ""}
       <p class="small" style="margin:8px 0 0">Using ${S.pminsSetAt || (S.pmins && Object.keys(S.pmins).length) ? "your personal minimums" : "starting minimums that are only a template"}. <a href="#/minimums">${S.pminsSetAt || (S.pmins && Object.keys(S.pmins).length) ? "Change them" : "Set your own"}</a>.</p>
       <p class="small muted" style="margin:8px 0 0">Distances are along the route from the departure. Terrain from public elevation data, airports and fuel from FAA data. Planning aid only.</p>`;
@@ -172,9 +181,9 @@
       if (!sec) { sec = document.createElement("section"); sec.className = "panel"; sec.id = "dpPanel"; sec.innerHTML = `<h2>Decision points</h2><p class="muted">Working out where to decide…</p>`; }
       const anchor = page.querySelector(":scope > #spPanel") || page.querySelector(":scope > #wcPanel") || page.querySelector(":scope > #rtPanel");
       if (anchor) { if (anchor.nextElementSibling !== sec) anchor.after(sec); } else if (!sec.isConnected) page.appendChild(sec);
-      const key = keyOf(f);
-      if (sec.dataset.k !== key) {
-        sec.dataset.k = key;
+      const key = keyOf(f), pkey = `${key}|${f.track ? f.track.at : 0}`;
+      if (sec.dataset.k !== pkey) {
+        sec.dataset.k = pkey;
         if (f.dpKey !== key || !Array.isArray(f.dps)) { f.dps = await build(f); f.dpKey = key; try { save(); } catch (e) {} }
         if (sec.isConnected) paint(sec, f);
       }

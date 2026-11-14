@@ -6,9 +6,9 @@
    their review status and can delete them at any time.
    Where it shows: a "Pilot comments" section on the airport page, a #acPanel in the brief (after #ltPanel, only when
    a route airport has approved comments) and a review queue on #/feedback/inbox for admins.
-   COMMENTS_LIVE stays false until the owner approves the privacy sentence (PRIV); the admin queue works either way. */
+   The owner approved the privacy sentence (PRIV) on November 13, 2026, and COMMENTS_LIVE is on. */
 (function () {
-  const COMMENTS_LIVE = false;
+  const COMMENTS_LIVE = true;
   const PRIV = "If you post an airport comment, we store the airport, your comment and the time, linked to your account. A comment is shown to other pilots without your name only after we review it, and you can delete your own comments at any time.";
   const h = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const day = (t) => { try { return new Date(t).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }); } catch (e) { return ""; } };

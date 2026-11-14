@@ -4,10 +4,11 @@
    privacy text) is unchanged. Panels not listed go under Help and legal. */
 (function () {
   const GROUPS = [
-    ["Settings", [/^Your flying/i, /^Display/i, /^AeroSignal AI connector/i, /^Account/i]],
-    ["Learn", [/^Tutorial/i, /^Demo tour/i]],
+    // Nov 14 (p267 pass): newer panels placed in their groups instead of all falling under Help and legal
+    ["Settings", [/^Your flying/i, /^What you fly most/i, /^Your certificate/i, /^Display/i, /^(AeroSignal|Vigilyn) AI connector/i, /^Account/i]],
+    ["Learn", [/^Tutorial/i, /^Demo tour/i, /^Questions and answers/i]],
     ["Tools", [/^Airports/i, /^Flight risk assessment/i, /^Checklists/i]],
-    ["Help and legal", [/^Feedback/i, /^Working with/i, /^Data sources/i, /^Privacy/i, /^About AeroSignal/i]],
+    ["Help and legal", [/^Feedback/i, /^Working with/i, /^Data sources/i, /^Privacy/i, /^About (AeroSignal|Vigilyn)/i]],
   ];
   const css = document.createElement("style");
   css.textContent = `

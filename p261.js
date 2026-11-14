@@ -13,7 +13,7 @@
   const h = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const FLAG = ".warn,.bad,.nogo,.red,.amber,.caution,.crit,.IFR,.LIFR,.MVFR,.no,.over";
   // scShare and rvMine: a student's Share with my school box and the instructor's review (p134, p165) stay in Quick
-  const KEEP = ["qkBar", "qkFlags", "qkMore", "qkDisc", "bfBluf", "dpPanel", "bbody", "sbNote", "scShare", "rvMine"];
+  const KEEP = ["qkBar", "qkFlags", "qkMore", "qkDisc", "bfBluf", "dpPanel", "bbody", "sbNote", "scShare", "rvMine", "fpAsk"];
 
   const st = document.createElement("style");
   st.textContent = `
@@ -29,7 +29,8 @@
     #qkFlags .qk-row:after{content:"Open in full brief \\203A";display:block;font-size:12px;opacity:.65;margin-top:3px}
     #bfJump .br-tg{display:none !important}
     #qkDisc{color:#ff4d6a;font-weight:700;font-size:14px;margin:6px 0 14px}
-    .page.qk > *:not(h1):not(#${KEEP.join("):not(#")}):not(.frat-chip):not(.lede):not(.strip):not(.bhead){display:none !important}
+    .page.qk > *:not(h1):not(#${KEEP.join("):not(#")}):not(.frat-chip):not(.lede):not(.strip):not(.bhead):not(.qk-pin-on){display:none !important}
+    .page.qk > .qk-pin-on{order:12}.page.qk > #fpAsk{order:6}
     .page.qk #bbody > details,.page.qk #bbody .item.low,.page.qk #bbody .item .why{display:none !important}
     .page.qk{display:flex;flex-direction:column}
     .page.qk > h1{order:1}.page.qk > #sbNote{order:2}.page.qk > #bfBluf{order:3}.page.qk > #qkBar{order:4}.page.qk > #qkDisc{order:5}.page.qk > #qkFlags{order:6}
@@ -44,7 +45,7 @@
   function flagged(pg) {
     const out = [];
     for (const s of pg.querySelectorAll(":scope > section.panel")) {
-      if (KEEP.includes(s.id) || !s.id) continue;
+      if (KEEP.includes(s.id) || !s.id || s.classList.contains("qk-pin-on")) continue;   // pinned ones (p263) already show
       const sum = s.querySelector(".pv-sum");
       if (sum && sum.querySelector(FLAG)) out.push({ id: s.id, t: titleOf(s), sum: sum.textContent.trim() });
     }
@@ -81,7 +82,8 @@
       const d = document.createElement("p"); d.id = "qkDisc"; d.textContent = "Planning aid only. Not for navigation. Pilots must verify everything against official sources.";
       bar.after(d);
       pg.classList.toggle("qk", mode() === "quick");
-      if (mode() === "full") try { if (!S.briefAll) { S.briefAll = true; save(); } } catch (e) {}
+      // p88's Essentials fold is superseded by Quick (and would hide pinned sections), so it is always off now
+      try { if (!S.briefAll) { S.briefAll = true; save(); } } catch (e) {}
       bar.querySelectorAll("[data-m]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.m === mode())));
       if (mode() === "quick") setTimeout(() => { const dp = pg.querySelector(":scope > #dpPanel"); if (dp && dp.classList.contains("pnl-min") && window.AeroPanels) try { AeroPanels.setMin(dp, false, true); } catch (e) {} }, 0);
     }
@@ -108,9 +110,9 @@
   let t = 0;
   new MutationObserver((l) => {
     if (!isBrief()) return;
-    if (l.every((m) => m.target.closest && m.target.closest("#qkFlags,#qkBar,#qkMore"))) return;
+    if (l.every((m) => m.target.closest && m.target.closest("#qkFlags,#qkBar,#qkMore,.qk-pin"))) return;
     clearTimeout(t); t = setTimeout(paint, 250);
   }).observe(document.getElementById("view") || document.body, { childList: true, subtree: true, characterData: true });
   window.addEventListener("hashchange", () => { lastSig = ""; });
-  window.AeroQuickBrief = { mode, apply, flagged: () => (page() ? flagged(page()) : []) };
+  window.AeroQuickBrief = { mode, apply, refresh: () => { lastSig = ""; paint(); }, flagged: () => (page() ? flagged(page()) : []) };
 })();

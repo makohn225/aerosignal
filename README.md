@@ -156,6 +156,7 @@ Edge functions deploy to Supabase project `jcvrcckeprmpcruhxafm`.
 - p265 Logbook at a glance card (#lbSum): currency status, totals, last flight, buttons to sections; long sections fold once (S.lbFolded), import box behind Import or replace
 - p266 Map layer presets in the Leaflet layers control (VFR basics, IFR, Mountain, Weather, Mine). S.mapPreset, window.AeroMapPresets
 - p267 Flights list: upcoming first, past grouped by month; risk assessment records and settings fold. Noted edit to p103 groups for newer More panels
+- p268 accident lessons by aircraft class and type (airline and large jets, business jets, turboprops, piston twins, helicopters): type code table, wraps buildBrief and rpc to call brief_matches_v2, theme_stats_v2 and accidents_near_route_v2 (migration 20261114_mishaps_by_aircraft_class.sql), eight new themes, "like mine / All aircraft" switch (S.mishapScope). Light singles unchanged. window.AeroAcClass
 - p89 logbook tags (November 13, small noted edit): f.tags edited in the flight dialog, a tag filter in Find flights, and tags in the search
 - p123 two finger measure needs an 850 ms hold (November 9); tests/tdz-scan.cjs checks all modules before a push; build.mjs adds a preconnect to cdnjs
 - p182 edit Nov 6: Fly screen only derives speed and track from precise fixes and says when the device has no GPS (laptops)

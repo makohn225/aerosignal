@@ -15,10 +15,10 @@
      brief does not fetch it again. Weather, NOTAMs, TFRs and delays are kept 2 minutes, and airport reports, which
      pilots post, 45 seconds. */
   const TTL = 45000, MAX = 250;
-  const LONG = /\/rpc\/(brief_matches|theme_stats|airport_detail|faa_airport|faa_airports_box|accidents_near_route|sdr_summary|resolve_points|mtr_by_ident)\b|\/functions\/v1\/(rwyends|divert|cifp|nearfix)\b|arcgis\.com/i;
+  const LONG = /\/rpc\/(brief_matches|brief_matches_v2|theme_stats|theme_stats_v2|accidents_near_route_v2|airport_detail|faa_airport|faa_airports_box|accidents_near_route|sdr_summary|resolve_points|mtr_by_ident)\b|\/functions\/v1\/(rwyends|divert|cifp|nearfix)\b|arcgis\.com/i;
   const LIVE = /\/functions\/v1\/(wx|winds|tfr|notams|wxhaz|nasstatus)\b/;
   const ttlOf = (k) => (LONG.test(k) ? 30 * 60000 : LIVE.test(k) ? 2 * 60000 : TTL);
-  const RPC = /\/rest\/v1\/rpc\/(brief_matches|theme_stats|airport_reports|recent_airport_reports|airport_detail|faa_airport|faa_airports_box|accidents_near_route|sdr_summary|resolve_points|mtr_by_ident)$/;
+  const RPC = /\/rest\/v1\/rpc\/(brief_matches|brief_matches_v2|theme_stats|theme_stats_v2|accidents_near_route_v2|airport_reports|recent_airport_reports|airport_detail|faa_airport|faa_airports_box|accidents_near_route|sdr_summary|resolve_points|mtr_by_ident)$/;
   const FN = /\/functions\/v1\/(wx|winds|tfr|notams|wxhaz|rwyends|divert|cifp|nasstatus|nearfix)(\?|$)/;
   const ARC = /^https:\/\/services\d*\.arcgis\.com\/.*\/query\?|^https:\/\/[a-z0-9.]*arcgis\.com\/.*FeatureServer\/\d+\/query\?/i;
   const store = new Map();

@@ -131,6 +131,12 @@
     const h = location.hash || "", c = flightClass();
     if (/^#\/brief(\/|$|\?)/.test(h)) {
       const bb = document.getElementById("bbody"); if (bb && c && scope() === "mine") words(bb, c);
+      // Say which aircraft the lessons follow, at the top of the accident lessons
+      if (bb && c && scope() === "mine" && !bb.querySelector(".ac-cls")) {
+        const p = document.createElement("p"); p.className = "small ac-cls"; p.style.cssText = "margin:0 0 10px;opacity:.9";
+        p.textContent = `Accident lessons for the ${c.name}${c.name === "your helicopter" ? "" : ` (${LABEL[c.cls][1]})`}: your type first, then aircraft like it.`;
+        bb.prepend(p);
+      }
       const rt = document.getElementById("rtPanel");
       if (rt) { if (c && scope() === "mine") words(rt, c); const body = rt.querySelector(":scope > h2 + *"); if (body && !rt.querySelector(".ms-scope")) { const box = document.createElement("div"); body.before(box); sw(box); } }
     }

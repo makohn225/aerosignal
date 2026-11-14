@@ -4,8 +4,9 @@
    what was added since their last visit (returning pilots only; titles only on phones), each with a link that opens it. It shows again only when something
    new is added, and Hide puts it away. It is also reachable at any time from More. Saved on this device only. */
 (function () {
-  const VER = "2026-11-14c", KEY = "vg_whatsnew";
+  const VER = "2026-11-14d", KEY = "vg_whatsnew";
   const ITEMS = [
+    ["#/maps", "See an accident in 3D", "Tap See in 3D on any NTSB accident to view the site over real terrain with the nearest runway, and play an illustrated path for that phase of flight."],
     ["#/brief", "Accidents for the aircraft you fly", "Fly a jet, turboprop, twin or helicopter? The brief and the route accident map now use accidents from aircraft like yours, your own type first."],
     ["#/more", "Your flying, your way", "Tell Vigilyn what you fly most (IFR, mountain, night and more) under More, Your flying, and pin any brief section to your Quick brief."],
     ["#/fly", "Choose your Fly screen", "Pick the cards and readouts you want under Customize. Anything that needs your attention still shows."],

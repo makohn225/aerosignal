@@ -4,8 +4,10 @@
    what was added since their last visit (returning pilots only; titles only on phones), each with a link that opens it. It shows again only when something
    new is added, and Hide puts it away. It is also reachable at any time from More. Saved on this device only. */
 (function () {
-  const VER = "2026-11-13f", KEY = "vg_whatsnew";
+  const VER = "2026-11-14a", KEY = "vg_whatsnew";
   const ITEMS = [
+    ["#/brief", "Quick brief", "The brief now opens with just the essentials: the bottom line, accident lessons, anything flagged and your decision points. Tap Full brief for every section."],
+    ["#/plan", "Faster on a weak signal", "The app starts faster, and the brief's slowest lookups begin in the background while you plan, so the brief opens sooner."],
     ["#/airports", "Pilot comments on airports", "Share what a visiting pilot should know about an airport, such as FBO service, the ramp or local procedures. Comments are reviewed before they show, without names, and appear on the airport page and in the brief."],
     ["#/maps", "Lightning, free", "Lightning from the last 15 minutes on the map, a lightning check along your route in the brief, and the nearest lightning on the Fly screen, from free NOAA data."],
     ["#/logbook", "Logbook tags", "Tag flights (checkride, mountain, training) in the flight dialog and filter by tag in Find flights."],

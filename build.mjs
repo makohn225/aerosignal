@@ -75,6 +75,9 @@ out = out.replace(CSS_RE, () => (firstCss ? ((firstCss = false), `<link rel="sty
 /* Fonts and the map library's stylesheet load without holding up the first paint. */
 out = out.replace(/<link (href="https:\/\/fonts\.googleapis\.com[^"]+") rel="stylesheet">/, '<link $1 rel="stylesheet" media="print" onload="this.media=\'all\'">');
 out = out.replace(/<link rel="stylesheet" (href="https:\/\/cdnjs\.cloudflare\.com\/[^"]+leaflet[^"]*\.css")>/, '<link rel="stylesheet" $1 media="print" onload="this.media=\'all\'">');
+/* The map library is served from this site (Nov 14): its script is bundled into the app script above (one request,
+   one host, cached with the app), and its stylesheet stays a separate file so its image paths keep working. */
+out = out.replace(/<link rel="stylesheet" href="\/vendor\/leaflet\/leaflet\.css" media="all">/, '<link rel="stylesheet" href="/vendor/leaflet/leaflet.css" media="print" onload="this.media=\'all\'">');
 /* The map library comes from another host: open that connection early so it downloads alongside the app (Nov 9). */
 if (!/rel="preconnect" href="https:\/\/cdnjs\.cloudflare\.com"/.test(out)) out = out.replace(/(<link rel="preconnect" href="https:\/\/fonts\.googleapis\.com">)/, '<link rel="preconnect" href="https://cdnjs.cloudflare.com">\n$1');
 fs.writeFileSync(path.join(OUT, "index.html"), out);

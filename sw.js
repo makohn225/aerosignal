@@ -14,7 +14,8 @@ const SHELL = ["/", "/manifest.webmanifest", "/styles.css", "/map.css", "/missio
   "/p1.js", "/p2.js", "/p3.js", "/p4.js", "/p5.js", "/p6.js", "/p7.js", "/p8.js", "/p9.js", "/p10.js", "/p11.js", "/p12.js", "/p13.js", "/p14.js", "/p15.js", "/p16.js", "/p17.js", "/p18.js", "/p19.js", "/p20.js", "/p21.js", "/p22.js", "/p23.js", "/p24.js", "/p25.js", "/p26.js", "/p27.js", "/p28.js", "/p29.js", "/p30.js", "/p31.js", "/p32.js", "/p33.js", "/p34.js", "/p35.js", "/p36.js", "/p37.js", "/p38.js", "/p39.js", "/p40.js", "/p41.js", "/p42.js", "/p43.js", "/p44.js", "/p45.js", "/p46.js", "/p47.js", "/p48.js", "/p49.js", "/p50.js", "/p51.js", "/p52.js", "/p53.js", "/p54.js", "/p55.js", "/p56.js", "/p57.js", "/milmishaps.js",
   "/samples/missions.bin", "/icons/icon-192.png", "/icons/apple-touch-icon.png"];
 const SHELL_SET = new Set(SHELL);
-const LIB_PRELOAD = ["https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js", "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"];
+// Nov 14: the map library now comes from this site (its script is inside the app bundle), so only its stylesheet is listed
+const LIB_PRELOAD = ["/vendor/leaflet/leaflet.css"];
 const TILE_HOSTS = /(^|\.)(tiles\.arcgis\.com|arcgisonline\.com|tile\.openstreetmap\.org|basemaps\.cartocdn\.com|opentopomap\.org|tile\.opentopomap\.org|stamen-tiles\.a\.ssl\.fastly\.net|tiles\.stadiamaps\.com)$/;
 const LIB_HOSTS = /^(cdnjs\.cloudflare\.com|fonts\.googleapis\.com|fonts\.gstatic\.com|unpkg\.com)$/;
 

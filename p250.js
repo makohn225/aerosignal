@@ -10,7 +10,14 @@
    answer is never kept, and each caller gets its own copy of the answer. */
 (function () {
   if (!window.fetch || !window.Response) return;
-  const TTL = 45000, MAX = 120;
+  /* How long an answer is reused (November 14). Reference data that changes rarely (accident matches, airport and
+     runway details, procedures, FAA map layers) is kept 30 minutes in memory, so moving between Plan, Maps and the
+     brief does not fetch it again. Weather, NOTAMs, TFRs and delays are kept 2 minutes, and airport reports, which
+     pilots post, 45 seconds. */
+  const TTL = 45000, MAX = 250;
+  const LONG = /\/rpc\/(brief_matches|theme_stats|airport_detail|faa_airport|faa_airports_box|accidents_near_route|sdr_summary|resolve_points|mtr_by_ident)\b|\/functions\/v1\/(rwyends|divert|cifp|nearfix)\b|arcgis\.com/i;
+  const LIVE = /\/functions\/v1\/(wx|winds|tfr|notams|wxhaz|nasstatus)\b/;
+  const ttlOf = (k) => (LONG.test(k) ? 30 * 60000 : LIVE.test(k) ? 2 * 60000 : TTL);
   const RPC = /\/rest\/v1\/rpc\/(brief_matches|theme_stats|airport_reports|recent_airport_reports|airport_detail|faa_airport|faa_airports_box|accidents_near_route|sdr_summary|resolve_points|mtr_by_ident)$/;
   const FN = /\/functions\/v1\/(wx|winds|tfr|notams|wxhaz|rwyends|divert|cifp|nasstatus|nearfix)(\?|$)/;
   const ARC = /^https:\/\/services\d*\.arcgis\.com\/.*\/query\?|^https:\/\/[a-z0-9.]*arcgis\.com\/.*FeatureServer\/\d+\/query\?/i;
@@ -29,7 +36,7 @@
     if (!k) return of.apply(this, arguments);
     const now = Date.now();
     let ent = store.get(k);
-    if (ent && now - ent.at > TTL) { store.delete(k); ent = null; }
+    if (ent && now - ent.at > ttlOf(k)) { store.delete(k); ent = null; }
     if (!ent) {
       const i2 = Object.assign({}, init); delete i2.signal;   // one caller giving up must not cancel it for the others
       ent = { at: now, p: null };
@@ -51,5 +58,6 @@
       out.then(res, rej);
     });
   };
-  window.AeroShare = { clear: () => store.clear(), size: () => store.size };
+  // Named AeroReadCache (it was AeroShare, which clashed with p91's share link helper; renamed November 14)
+  window.AeroReadCache = { clear: () => store.clear(), size: () => store.size, ttl: ttlOf };
 })();

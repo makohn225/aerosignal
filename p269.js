@@ -14,7 +14,7 @@
   const DEM = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png";
   const IMG = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
   // An NTSB number such as ERA24FA053 or DCA22MA001A; the text around it can run straight on ("ERA24FA053Match 80")
-  const NUM = /\b([A-Z]{3}\d{2}[A-Z]{2}\d{3})([A-Z](?![a-z]))?/;
+  const NUM = /\b([A-Z]{3}\d{2}[A-Z]{2}\d{3})([A-Z](?![A-Za-z]))?/;   // a suffix letter only when nothing else follows ("…053BLUF" is 053)
   const R = Math.PI / 180, M_PER_NM = 1852, FT = 0.3048;
   const h = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 

@@ -106,8 +106,9 @@
     // Long routes: load the centerline only, so the tiles near the departure are not pushed out of memory (Nov 9)
     let tot = 0; for (let i = 1; i < P.length; i++) tot += dist(P[i - 1], P[i]);
     const offs = tot > 250 ? [0] : [-3, 0, 3];
+    const every = Math.max(2, tot / 180);   // Nov 14 (p269 pass): at most about 180 points, inside the 220 tile memory
     for (let i = 1; i < P.length; i++) {
-      const a = P[i - 1], b = P[i], n = Math.max(1, Math.ceil(dist(a, b) / 2)), c = brg(a, b);
+      const a = P[i - 1], b = P[i], n = Math.max(1, Math.ceil(dist(a, b) / every)), c = brg(a, b);
       for (let k = 0; k <= n; k++) { const m = { lat: a.lat + ((b.lat - a.lat) * k) / n, lon: a.lon + ((b.lon - a.lon) * k) / n }; for (const off of offs) { const q = off ? fwd(m, (c + 90) % 360, off) : m; E(q.lat, q.lon); } }
     }
   }

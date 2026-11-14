@@ -40,11 +40,14 @@
   const pts = (f) => ((f && f.points) || []).filter((p) => isFinite(p.lat) && isFinite(p.lon));
   const up100 = (x) => Math.ceil(x / 100) * 100;
   const fmt = (n) => Math.round(n).toLocaleString("en-US");
-  // Samples every 1 nm with along route distance
+  // Samples every 1 nm with along route distance; on long routes no more than about 180 samples in all, so the
+  // elevation tiles stay within the 220 tile memory of p189 (a coast to coast route was loading thousands of tiles, Nov 14)
   function samples(P) {
     const out = [{ lat: P[0].lat, lon: P[0].lon, at: 0 }]; let at = 0;
+    let tot = 0; for (let i = 1; i < P.length; i++) tot += dist(P[i - 1], P[i]);
+    const every = Math.max(1, tot / 180);
     for (let i = 1; i < P.length; i++) {
-      const a = P[i - 1], b = P[i], d = dist(a, b), n = Math.max(1, Math.ceil(d));
+      const a = P[i - 1], b = P[i], d = dist(a, b), n = Math.max(1, Math.ceil(d / every));
       for (let k = 1; k <= n; k++) out.push({ lat: a.lat + ((b.lat - a.lat) * k) / n, lon: a.lon + ((b.lon - a.lon) * k) / n, at: at + (d * k) / n });
       at += d;
     }

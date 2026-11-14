@@ -55,9 +55,11 @@
   }
   async function terrain(S2) {
     const E = window.AeroPreview && AeroPreview.elev; if (!E) return null;
+    // Long routes read coarser elevation tiles (zoom 9), so the whole route fits in memory (Nov 14)
+    const span = S2.length > 1 ? dist(S2[0], S2[S2.length - 1]) : 0, z = span > 300 || (S2[S2.length - 1] && S2[S2.length - 1].at > 300) ? 9 : 12;
     let got = [];
     for (let tries = 0; tries < 30; tries++) {
-      got = S2.map((s) => E(s.lat, s.lon));
+      got = S2.map((s) => E(s.lat, s.lon, z));
       const have = got.filter((v) => v != null).length;
       if (have >= S2.length * 0.95) break;
       await new Promise((r) => setTimeout(r, 200));

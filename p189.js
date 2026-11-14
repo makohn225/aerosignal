@@ -173,9 +173,11 @@
     } catch (e) {}
   }
   const tiles = new Map();
-  function elev(lat, lon) {
-    const z = 12, n = 2 ** z, x = ((lon + 180) / 360) * n, sl = Math.sin(lat * R), y = (0.5 - Math.log((1 + sl) / (1 - sl)) / (4 * Math.PI)) * n;
-    const tx = Math.floor(x), ty = Math.floor(y), key = `${tx}/${ty}`;
+  // z: tile zoom. 12 (about 30 m) by default; long route overviews pass 9 so a coast to coast route needs a few dozen
+  // tiles instead of hundreds (Nov 14)
+  function elev(lat, lon, zz) {
+    const z = zz === 9 || zz === 10 || zz === 11 ? zz : 12, n = 2 ** z, x = ((lon + 180) / 360) * n, sl = Math.sin(lat * R), y = (0.5 - Math.log((1 + sl) / (1 - sl)) / (4 * Math.PI)) * n;
+    const tx = Math.floor(x), ty = Math.floor(y), key = `${z}/${tx}/${ty}`;
     let t = tiles.get(key);
     if (!t) {
       t = { data: null };

@@ -100,8 +100,9 @@
       const near = C.map((c) => ({ c, r: nearRoute(P, c) })).filter((x) => x.r && x.r.x <= 30).sort((a, b) => a.r.x - b.r.x);
       const age = ageMin(t);
       let txt;
-      if (!near.length) txt = `No lightning detected within 30 nm of the route in the 15 minutes to ${when(t)}.`;
-      else { const n = near[0]; txt = `<b>Lightning detected ${n.r.x < 1 ? "on the route" : `${fmt(Math.max(1, n.r.x))} nm from the route`}</b>, near ${fmt(n.r.at)} nm along it, in the 15 minutes to ${when(t)}. Thunderstorms nearby mean turbulence, hail and wind shear well beyond the cell: plan to stay at least 20 nm clear.`; }
+      const per = t ? `in the 15 minutes to ${when(t)}` : "in the latest 15 minutes";
+      if (!near.length) txt = `No lightning detected within 30 nm of the route ${per}.`;
+      else { const n = near[0]; txt = `<b>Lightning detected ${n.r.x < 1 ? "on the route" : `${fmt(Math.max(1, n.r.x))} nm from the route`}</b>, near ${fmt(n.r.at)} nm along it, ${per}. Thunderstorms nearby mean turbulence, hail and wind shear well beyond the cell: plan to stay at least 20 nm clear.`; }
       sec.innerHTML = `${H2}<p class="lt-r">${txt}</p><p class="small muted" style="margin:8px 0 0">${age != null ? `${age} minutes old. ` : ""}NWS Ocean Prediction Center lightning strike density via NOAA nowCOAST, from ground based detection networks. It can miss strikes and is not for lightning safety decisions. <a href="#/maps">Show it on the map</a>.</p>`;
     } catch (e) { console.error(e); } finally { setTimeout(() => (busy = false), 0); }
   }
@@ -113,19 +114,19 @@
     const st = window.AeroFly && AeroFly.state, pos = st && st.pos;
     let el = page.querySelector("#ltFly");
     if (!pos || navigator.onLine === false) { if (el) el.remove(); return; }
-    if (Date.now() - flyAt > 5 * 60000 || !flyRes) {
+    if (Date.now() - flyAt > 5 * 60000 || !flyRes || (flyRes.from && dist(flyRes.from, pos) > 15 && Date.now() - flyAt > 60000)) {
       flyAt = Date.now();
       try { const t = await latest(); const C = await cells(boxAround([pos], 40), t); const near = C.map((c) => ({ c, d: dist(pos, c) })).filter((x) => x.d <= 40).sort((a, b) => a.d - b.d); flyRes = { t, n: near[0] || null, from: { lat: pos.lat, lon: pos.lon } }; } catch (e) { flyRes = null; }
     }
     if (!flyRes) { if (el) el.remove(); return; }
     if (!el) { el = document.createElement("div"); el.id = "ltFly"; const a = page.querySelector("#daFly") || page.querySelector("#tdFly") || page.querySelector("#recFly") || page.querySelector("h1"); if (a) a.after(el); else page.prepend(el); }
     let html;
-    if (!flyRes.n) { el.className = ""; html = `No lightning within 40 nm <span class="small">(${ageMin(flyRes.t)} min old data)</span>`; }
+    if (!flyRes.n) { el.className = ""; html = `No lightning within 40 nm <span class="small">(${flyRes.t ? `${ageMin(flyRes.t)} min old data` : "latest data"})</span>`; }
     else {
       const d = dist(pos, flyRes.n.c), b = brg(pos, flyRes.n.c), trk = st.trk != null ? st.trk : (pos.trk != null ? pos.trk : null);
       let side = ""; if (trk != null) { const rel = ((b - trk + 540) % 360) - 180; side = Math.abs(rel) <= 30 ? "ahead" : Math.abs(rel) >= 150 ? "behind" : rel > 0 ? "to the right" : "to the left"; }
       el.className = d <= 20 ? "warn" : "";
-      html = `<b>Lightning ${fmt(Math.max(1, d))} nm ${side || `bearing ${String(Math.round(b)).padStart(3, "0")}°`}</b> <span class="small">(${ageMin(flyRes.t)} min old data, NOAA)</span>${d <= 20 ? `<br><span class="small">Stay at least 20 nm from thunderstorms.</span>` : ""}`;
+      html = `<b>Lightning ${fmt(Math.max(1, d))} nm ${side || `bearing ${String(Math.round(b)).padStart(3, "0")}°`}</b> <span class="small">(${flyRes.t ? `${ageMin(flyRes.t)} min old data` : "latest data"}, NOAA)</span>${d <= 20 ? `<br><span class="small">Stay at least 20 nm from thunderstorms.</span>` : ""}`;
     }
     if (el.innerHTML !== html) el.innerHTML = html;
   }

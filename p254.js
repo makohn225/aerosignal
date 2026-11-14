@@ -41,8 +41,11 @@
     if (!f) return;
     if (!rec || rec.fid !== f.id || rec.done && rec.reason === "stopped") {
       if (rec && !rec.done) finish("switched");
-      const prev = Array.isArray(f.trackLive) ? f.trackLive : [];
+      // Picking up again after the Fly screen was stopped and restarted within 30 minutes: continue the same recording
+      let prev = Array.isArray(f.trackLive) ? f.trackLive : [];
+      if (!prev.length && f.track && f.track.source === "fly" && (f.track.pts || []).length) { const lp = f.track.pts[f.track.pts.length - 1]; if (Date.now() - lp[3] < 30 * 60000) prev = f.track.pts; }
       rec = { fid: f.id, pts: prev.slice(), done: false, flew: prev.length > 0 };
+      if (rec.flew && (st.pos && (st.pos.kt || 0) < 30)) slowSince = Date.now();
       slowSince = 0;
     }
     if (rec.done) return;

@@ -175,3 +175,4 @@ neighbor another module already uses): bbody, dbPanel, wtgPanel, trkPanel, rwPan
 llPanel, lcPanel, wbPanel, goPanel, pkPanel, tfrPanel, ntPanel, advPanel, asPanel, pmPanel, waPanel, mnPanel.
 
 - p350 Daylight and night panel on the brief (sunrise, sunset, civil twilight, time after dark; `AeroDaylight`)
+- p352 Copy pad (`AeroCopyPad`): ATIS for each route airport with runway wind components, density altitude, altimeter checked against the latest METAR and the "with information" call; CRAFT clearance with squawk, frequency, limit and altitude checks and a spoken readback; scribble pad (this device only, last five flights) and notes. Opens over any page (Fly screen button and optional #cpFly card, Flight plan sheet button) so GPS keeps running; also #/pad. Typed copies saved in f.pad

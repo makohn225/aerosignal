@@ -275,7 +275,21 @@
   function scribble(box, id) {
     const cv = box.querySelector("canvas"), ctx = cv.getContext("2d");
     let mode = "pen", down = false, last = null, dirty = false, t = 0;
-    const ink = getComputedStyle(document.documentElement).getPropertyValue("--ink").trim() || "#EAF2FF";
+    // Pen color follows the text color the pad is actually drawn with, so it stays dark on the light theme and light
+    // on the dark one (Nov 18: the --ink fallback drew pale grey on the light theme)
+    const ink = (() => {
+      // Dark ink on a pad that looks light, light ink on one that looks dark. The light theme inverts the page with a CSS
+      // filter (and the canvas inverts back), so count the inverting filters on the way up for both the background and the canvas
+      const inv = (e) => { let n = 0; for (; e; e = e.parentElement) if (/invert\(1\)/.test(getComputedStyle(e).filter || "")) n++; return n % 2 === 1; };
+      let lum = 0, bgEl = document.documentElement;
+      for (let e = cv.parentElement; e; e = e.parentElement) {
+        const m = /rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?/.exec(getComputedStyle(e).backgroundColor || "");
+        if (m && (m[4] === undefined || +m[4] > 0.5)) { lum = 0.299 * m[1] + 0.587 * m[2] + 0.114 * m[3]; bgEl = e; break; }
+      }
+      const looksLight = inv(bgEl) ? lum < 115 : lum > 140;
+      const want = looksLight ? "#14181f" : "#eef2f8", flip = { "#14181f": "#eef2f8", "#eef2f8": "#14181f" };
+      return inv(cv) ? flip[want] : want;   // what is drawn on the canvas shows inverted if the canvas sits under an odd number of inverts
+    })();
     const size = () => {
       const r = cv.getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1);
       const img = cv.width ? cv.toDataURL() : (drawStore()[id] || {}).img;
@@ -291,7 +305,7 @@
       if (!down) return;
       const p = pt(e);
       ctx.globalCompositeOperation = mode === "erase" ? "destination-out" : "source-over";
-      ctx.strokeStyle = ink; ctx.lineWidth = mode === "erase" ? 22 : 1.6 + p[2] * 2.2;
+      ctx.strokeStyle = ink; ctx.lineWidth = mode === "erase" ? 22 : 2.6 + p[2] * 2.2;
       ctx.beginPath(); ctx.moveTo(last[0], last[1]); ctx.lineTo(p[0], p[1]); ctx.stroke();
       last = p; keep(); e.preventDefault();
     };

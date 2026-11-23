@@ -5,7 +5,7 @@
    the rest show their first sentence. Tap the title (or Show) to open a section. A section the pilot has
    opened or folded by hand keeps that choice (p65 remembers it). */
 (function () {
-  const LINE = { rwPanel: "bf-rw", ntPanel: "bf-nt", advPanel: "bf-adv", asPanel: "bf-as", wbPanel: "bf-wbf", lcPanel: "bf-lc", llPanel: "bf-ll", dvPanel: "bf-dv", pfPanel: "bf-pf" };
+  const LINE = { rwPanel: "bf-rw", ntPanel: "bf-nt", advPanel: "bf-adv", asPanel: "bf-as", wbPanel: "bf-wbf", lcPanel: "bf-lc", llPanel: "bf-ll", dvPanel: "bf-dv", pfPanel: "bf-pf", iaPanel: "bf-alt" };
   const css = document.createElement("style");
   css.textContent = `
     #view .page > section.panel > h2 .pv-sum{display:none}

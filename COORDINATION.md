@@ -60,3 +60,7 @@ Never anchor a new brief panel right after a panel another module already anchor
 that both insist on "right after #advPanel" swap places forever and the page jumps (p92 and p350,
 fixed November 2, 2026). Anchor to the last panel in that chain instead, currently
 #advPanel > #asPanel > #dayPanel > #nsPanel (p175) > #gpPanel (p177, November 3) > #kiPanel (p183, November 4) > #fsPanel (p192, November 8) > #rtPanel (p195, November 9) > #wcPanel (p251) > #spPanel (p252, November 12, only for sport pilots) > #dpPanel (p253, November 13) > #rpPanel (p255) > #ltPanel (p258) > #acPanel (p260, only when there are approved comments), so a new panel goes after #ltPanel, and p260 keeps #acPanel last. p261 Quick brief hides every brief section except its KEEP list (bfBluf, bbody, dpPanel, scShare, rvMine and its own); a new section that must show in Quick needs adding there (or the pilot can pin it, p263). New Fly screen cards: add the id to CARDS in p264 so the pilot can choose it.
+
+p353 (IFR alternate, #iaPanel, November 23, 2026) sits after #acPanel when it is present, otherwise after #ltPanel. It never
+anchors to #ltPanel while #acPanel exists, so it does not fight p260. A new panel at the end of the chain goes after #iaPanel
+(shown only on civil IFR flights), falling back to #acPanel and then #ltPanel.

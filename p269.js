@@ -130,7 +130,8 @@
     try { cur.map && cur.map.remove(); } catch (e) {}
     const el = document.getElementById("m3"); if (el) el.remove();
     document.removeEventListener("keydown", cur.key);
-    cur = null;
+    const back = cur.back; cur = null;
+    try { if (back && back.isConnected) back.focus(); } catch (e) {}
   }
 
   async function open(num) {
@@ -140,9 +141,12 @@
       <div class="m3-map"><div id="m3Map"></div><div class="m3-tag" hidden>Illustration only, not the actual flight path</div><div class="m3-msg">Loading the accident and 3D terrain…</div></div>
       <div class="m3-info"><p class="small">Loading…</p></div>`;
     document.body.appendChild(el);
-    cur = { key: (e) => { if (e.key === "Escape") close(); } };
+    // Keyboard and screen reader users land on Close, and return to the button they came from afterwards
+    cur = { key: (e) => { if (e.key === "Escape") close(); }, back: document.activeElement };
+    el.setAttribute("aria-modal", "true");
     document.addEventListener("keydown", cur.key);
     el.querySelector(".m3-x").onclick = close;
+    try { el.querySelector(".m3-x").focus(); } catch (e) {}
     const msg = (t) => { const m = el.querySelector(".m3-msg"); if (!m) return; m.hidden = !t; m.textContent = t || ""; };
     let ev, narr;
     try {

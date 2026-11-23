@@ -29,7 +29,8 @@
     #qkFlags .qk-row:after{content:"Open in full brief \\203A";display:block;font-size:12px;opacity:.65;margin-top:3px}
     #bfJump .br-tg{display:none !important}
     #qkDisc{color:#ff4d6a;font-weight:700;font-size:14px;margin:6px 0 14px}
-    .page.qk > *:not(h1):not(#${KEEP.join("):not(#")}):not(.frat-chip):not(.lede):not(.strip):not(.bhead):not(.qk-pin-on){display:none !important}
+    body:not(.tut) .page.qk > *:not(h1):not(#${KEEP.join("):not(#")}):not(.frat-chip):not(.lede):not(.strip):not(.bhead):not(.qk-pin-on){display:none !important}
+    /* The narrated tutorial (p19, body.tut) shows the full brief so its spotlights find their sections */
     .page.qk > .qk-pin-on{order:12}.page.qk > #fpAsk{order:6}
     .page.qk #bbody > details,.page.qk #bbody .item.low,.page.qk #bbody .item .why{display:none !important}
     .page.qk{display:flex;flex-direction:column}

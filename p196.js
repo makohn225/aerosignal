@@ -39,7 +39,19 @@
         for (const o of [-2, 0, 2]) set.add(`${DEM}${tx(lon + ((o / 60) * -uy) / k)}/${ty(lat + (o / 60) * ux)}.png`);
       }
     }
-    return [...set].slice(0, 500);
+    // Long routes: the brief reads zoom 9 tiles for its terrain overview (p189 elev, p253, p255), so save those too,
+    // ahead of the detailed tiles so they always fit (Nov 22)
+    let tot = 0; for (let i = 1; i < P.length; i++) tot += dist(P[i - 1], P[i]);
+    const coarse = new Set();
+    if (tot > 300) {
+      const Z = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/9/", n9 = 512;
+      const x9 = (lon) => Math.floor(((lon + 180) / 360) * n9), y9 = (lat) => { const r = lat * R; return Math.floor(((1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2) * n9); };
+      for (let i = 1; i < P.length; i++) {
+        const a = P[i - 1], b = P[i], n = Math.max(1, Math.ceil(dist(a, b) / 8));
+        for (let k = 0; k <= n; k++) { const t = k / n; coarse.add(`${Z}${x9(a.lon + (b.lon - a.lon) * t)}/${y9(a.lat + (b.lat - a.lat) * t)}.png`); }
+      }
+    }
+    return [...coarse, ...[...set].slice(0, 500)];
   }
   async function download(list) {
     const c = await caches.open(REGION);

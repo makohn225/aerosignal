@@ -22,3 +22,8 @@ grant execute on function public.airport_reports_v2(text[], integer, text) to an
 --    Supabase grants new functions to anon by default). airport_comments_for stays public: it lists approved comments.
 revoke execute on function public.add_airport_comment(text, text), public.my_airport_comments(text), public.delete_my_airport_comment(bigint),
   public.pending_airport_comments(), public.review_airport_comment(bigint, boolean), public.is_app_admin() from anon;
+
+-- Applied Nov 25 as part of the same approved change: is_app_admin was still callable by visitors through the
+-- default PUBLIC grant, so revoking from anon alone did not close it.
+revoke execute on function public.is_app_admin() from public, anon;
+grant execute on function public.is_app_admin() to authenticated, service_role;

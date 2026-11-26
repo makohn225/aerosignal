@@ -8,7 +8,9 @@
    turbine engine failures, bird strikes, wire strikes, loss of tail rotor effectiveness and engine loss in a twin.
    Light single pilots see no change. The route accident map and the brief's route section get an
    "Aircraft like mine / All aircraft" switch (S.mishapScope). Needs the database functions brief_matches_v2,
-   theme_stats_v2 and accidents_near_route_v2 (migration 20261114_mishaps_by_aircraft_class.sql, approved). */
+   theme_stats_v2 and accidents_near_route_v2 (migration 20261114_mishaps_by_aircraft_class.sql, approved).
+   November 25: the brief's "Accidents at airports on this route" uses the same class through airport_reports_v2
+   (migration 20261122_class_index_airport_reports_grants.sql, approved), not light singles for every aircraft. */
 (function () {
   if (typeof rpc !== "function" || typeof buildBrief !== "function") return;
   const LABEL = {
@@ -80,11 +82,15 @@
   );
 
   /* Brief: carry the class on the flight profile so themes, counts and wording follow it */
+  let briefCls = null;
   const origBuild = buildBrief;
   buildBrief = async function (t) {
     const c = scope() === "mine" && t && t.f && !t.f.missionId ? classFor(t.ac || acOf(t.f)) : null;
     if (c) { t.acClass = c; t.fam = `X:${c.code}`; FAMNAME[t.fam] = c.name; }
-    return origBuild(t);
+    // "Accidents at airports on this route" follows the same class as the other lessons (airport_reports_v2,
+    // approved November 22). With All aircraft the lessons stay on light singles, so this section does too.
+    const tok = {}; briefCls = { tok, cls: c ? c.cls : null };
+    try { return await origBuild(t); } finally { if (briefCls && briefCls.tok === tok) briefCls = null; }
   };
   const origRpc = rpc;
   rpc = function (name, args) {
@@ -95,6 +101,8 @@
           ? origRpc("brief_matches_v2", { theme_keys: args.theme_keys, cls: c[0], type_re: c[1] || null, per_theme: args.per_theme || 3 })
           : origRpc("theme_stats_v2", { theme_keys: args.theme_keys, cls: c[0], type_re: c[1] || null });
       }
+      if (name === "airport_reports" && args && briefCls && briefCls.cls && briefCls.cls !== "light")
+        return origRpc("airport_reports_v2", { codes: args.codes, lim: args.lim || 5, cls: briefCls.cls });
       if (name === "accidents_near_route" && args) {
         const c = flightClass(), sc = scope();
         if (sc === "all") return origRpc("accidents_near_route_v2", { ...args, cls: "all" });

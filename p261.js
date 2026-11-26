@@ -12,8 +12,9 @@
   const setMode = (m) => { try { localStorage.setItem(KEY, m); } catch (e) {} };
   const h = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const FLAG = ".warn,.bad,.nogo,.red,.amber,.caution,.crit,.IFR,.LIFR,.MVFR,.no,.over";
+  // hfPanel: Human factors for this flight (p271) stays in Quick, folded to its one line summary
   // scShare and rvMine: a student's Share with my school box and the instructor's review (p134, p165) stay in Quick
-  const KEEP = ["qkBar", "qkFlags", "qkMore", "qkDisc", "bfBluf", "dpPanel", "bbody", "sbNote", "scShare", "rvMine", "fpAsk"];
+  const KEEP = ["qkBar", "qkFlags", "qkMore", "qkDisc", "bfBluf", "dpPanel", "bbody", "sbNote", "scShare", "rvMine", "fpAsk", "hfPanel"];
 
   const st = document.createElement("style");
   st.textContent = `
@@ -31,7 +32,7 @@
     #qkDisc{color:#ff4d6a;font-weight:700;font-size:14px;margin:6px 0 14px}
     body:not(.tut) .page.qk > *:not(h1):not(#${KEEP.join("):not(#")}):not(.frat-chip):not(.lede):not(.strip):not(.bhead):not(.qk-pin-on){display:none !important}
     /* The narrated tutorial (p19, body.tut) shows the full brief so its spotlights find their sections */
-    .page.qk > .qk-pin-on{order:12}.page.qk > #fpAsk{order:6}
+    .page.qk > .qk-pin-on{order:12}.page.qk > #fpAsk{order:6}.page.qk > #hfPanel{order:12}
     .page.qk #bbody > details,.page.qk #bbody .item.low,.page.qk #bbody .item .why{display:none !important}
     .page.qk{display:flex;flex-direction:column}
     .page.qk > h1{order:1}.page.qk > #sbNote{order:2}.page.qk > #bfBluf{order:3}.page.qk > #qkBar{order:4}.page.qk > #qkDisc{order:5}.page.qk > #qkFlags{order:6}
